@@ -40,6 +40,19 @@ export default function App() {
     reload();
   }, [reload]);
 
+  // Linphone'ga yangi kontakt qo'shilganda server xabar beradi — doskani yangilaymiz
+  useEffect(() => {
+    const es = new EventSource("/api/events");
+    es.addEventListener("linphone", (e) => {
+      const r = JSON.parse((e as MessageEvent).data) as { added: number; names: string[] };
+      showToast(r.added === 1 ? `Linphone'dan yangi kontakt: ${r.names[0]}` : `Linphone'dan ${r.added} ta yangi kontakt qo'shildi`);
+      reload();
+    });
+    // Server qayta ishga tushganda ulanish tiklanadi — orada o'tkazib yuborilgan o'zgarishlarni olamiz
+    es.addEventListener("open", () => reload());
+    return () => es.close();
+  }, [reload, showToast]);
+
   // "/" — qidiruvga o'tish
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

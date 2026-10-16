@@ -1,80 +1,13 @@
 import { Router } from "express";
-import os from "node:os";
-import path from "node:path";
-import fs from "node:fs";
-import { DatabaseSync } from "node:sqlite";
-import { firstColumnId, prisma, topOrder } from "../db.js";
+import { prisma, topOrder } from "../db.js";
+import { importLinphone } from "../linphone.js";
 import { csvCell, HttpError, olxTitle, parseCsv, phoneKey } from "../lib/text.js";
 
 export const importExportRouter = Router();
 
-const LINPHONE_DB =
-  process.env.LINPHONE_DB ?? path.join(os.homedir(), "Library/Application Support/linphone/linphone.db");
-
-type LinphoneContact = { linphoneId: number; name: string; phone: string; olxUrl: string };
-
-/** Linphone bazasidagi vCard'larni o'qiydi (faqat o'qish rejimida). */
-function readLinphone(): LinphoneContact[] {
-  if (!fs.existsSync(LINPHONE_DB)) throw new HttpError(404, "Linphone bazasi topilmadi: " + LINPHONE_DB);
-  const db = new DatabaseSync(LINPHONE_DB, { readOnly: true });
-  try {
-    const rows = db.prepare("SELECT id, v_card FROM friend WHERE v_card IS NOT NULL ORDER BY id").all() as {
-      id: number;
-      v_card: string;
-    }[];
-    return rows.map(({ id, v_card }) => {
-      // vCard qatorlari bukilgan bo'lishi mumkin (keyingi qator bo'shliq bilan boshlanadi)
-      const text = v_card.replace(/\r\n/g, "\n").replace(/\n[ \t]/g, "");
-      const f: Record<string, string> = {};
-      for (const line of text.split("\n")) {
-        const i = line.indexOf(":");
-        if (i < 0) continue;
-        const key = line.slice(0, i).split(";")[0].toUpperCase();
-        f[key] ??= line.slice(i + 1).trim();
-      }
-      return { linphoneId: id, name: f.FN ?? "", phone: f.TEL ?? "", olxUrl: f.ORG ?? "" };
-    });
-  } finally {
-    db.close();
-  }
-}
-
-/** Linphone'dagi yangi kontaktlarni birinchi ustunga qo'shadi. Avval olinganlar va bor raqamlar o'tkazib yuboriladi. */
+/** Linphone'dagi yangi kontaktlarni qo'lda import qilish (menyudagi tugma). */
 importExportRouter.post("/import/linphone", async (_req, res) => {
-  const contacts = readLinphone();
-  const columnId = await firstColumnId();
-  if (!columnId) throw new HttpError(400, "Avval ustun yarating");
-
-  const imported = new Set((await prisma.linphoneImport.findMany({ select: { linphoneId: true } })).map((r) => r.linphoneId));
-  const known = new Set((await prisma.lead.findMany({ select: { phoneKey: true } })).map((l) => l.phoneKey).filter(Boolean));
-
-  let order = await topOrder(columnId);
-  let added = 0;
-  let duplicates = 0;
-  for (const c of contacts.reverse()) {
-    if (imported.has(c.linphoneId)) continue;
-    const key = phoneKey(c.phone);
-    if (key && known.has(key)) duplicates++;
-    else {
-      await prisma.lead.create({
-        data: {
-          ownerName: c.name,
-          phone: c.phone,
-          phoneKey: key,
-          olxUrl: c.olxUrl,
-          houseName: olxTitle(c.olxUrl),
-          columnId,
-          order,
-          linphoneId: c.linphoneId,
-        },
-      });
-      order -= 1000;
-      added++;
-      if (key) known.add(key);
-    }
-    await prisma.linphoneImport.create({ data: { linphoneId: c.linphoneId } });
-  }
-  res.json({ total: contacts.length, added, duplicates });
+  res.json(await importLinphone());
 });
 
 const CSV_HEAD = ["Ism", "Telefon", "Uy nomi", "OLX", "Rentmi", "Bosqich", "Qayta qo'ng'iroq", "Izoh", "O'zgartirilgan"];

@@ -8,6 +8,8 @@ import { HttpError } from "./lib/text.js";
 import { columnsRouter } from "./routes/columns.js";
 import { importExportRouter } from "./routes/importExport.js";
 import { leadsRouter } from "./routes/leads.js";
+import { broadcast, eventsHandler } from "./events.js";
+import { watchLinphone } from "./linphone.js";
 
 const PORT = Number(process.env.PORT ?? 4000);
 const app = express();
@@ -22,6 +24,7 @@ app.get("/api/board", async (_req, res) => {
   ]);
   res.json({ columns, leads });
 });
+app.get("/api/events", eventsHandler);
 app.use("/api/columns", columnsRouter);
 app.use("/api/leads", leadsRouter);
 app.use("/api", importExportRouter);
@@ -44,6 +47,11 @@ const onError: ErrorRequestHandler = (err, _req, res, _next) => {
 app.use(onError);
 
 await ensureDefaultColumns();
+// Linphone'ga yangi kontakt qo'shilsa avtomatik doskaga tushadi va ochiq sahifa yangilanadi
+watchLinphone((r) => {
+  console.log(`Linphone: ${r.added} ta yangi kontakt — ${r.names.join(", ")}`);
+  broadcast("linphone", r);
+});
 app.listen(PORT, "127.0.0.1", () => {
   console.log(`Uy egalari doskasi: http://localhost:${PORT}`);
 });
