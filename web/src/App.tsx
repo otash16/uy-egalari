@@ -107,6 +107,8 @@ export default function App() {
       found: q ? leads.filter((l) => matches(l, q)).length : 0,
       callsToday: calls.filter((c) => isToday(c.startedAt)).length,
       talkedToday: calls.filter((c) => isToday(c.startedAt) && isTalked(c)).length,
+      callsAll: calls.length,
+      talkedAll: calls.filter(isTalked).length,
     };
   }, [leads, calls, q]);
 
@@ -214,7 +216,7 @@ export default function App() {
           <>
             {q && <span className="found">{stats.found} ta topildi</span>}
             <span>
-              Jami <b>{stats.total}</b>
+              Uy egalari <b>{stats.total}</b>
             </span>
             <span>
               Rentmi'ga joylangan <b>{stats.onRentmi}</b>
@@ -224,6 +226,9 @@ export default function App() {
             </span>
             <button type="button" className="stat-link" onClick={() => setCallsOpen(true)}>
               Bugun qo'ng'iroq <b>{stats.callsToday}</b>, gaplashildi <b>{stats.talkedToday}</b>
+            </button>
+            <button type="button" className="stat-link" onClick={() => setCallsOpen(true)}>
+              Jami qo'ng'iroq <b>{stats.callsAll}</b>, gaplashildi <b>{stats.talkedAll}</b>
             </button>
           </>
         ) : (
