@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+/// Kanban ustuni (bosqich): "Yangi", "Qo'ng'iroq qilindi" va h.k.
+model Column {
+  id        String   @id @default(cuid())
+  name      String
+  color     Int      @default(0)
+  order     Float
+  leads     Lead[]
+  createdAt DateTime @default(now())
+}
+
+/// Uy egasi (lid) — bitta kanban kartasi.
+model Lead {
+  id         String   @id @default(cuid())
+  ownerName  String   @default("")
+  phone      String   @default("")
+  /// Qidiruv va dublikat tekshiruvi uchun: faqat raqamlar, 998 prefiksisiz.
+  phoneKey   String   @default("")
+  houseName  String   @default("")
+  olxUrl     String   @default("")
+  rentmeUrl  String   @default("")
+  note       String   @default("")
+  /// Qayta qo'ng'iroq sanasi, YYYY-MM-DD yoki bo'sh.
+  nextCall   String   @default("")
+  order      Float
+  columnId   String
+  column     Column   @relation(fields: [columnId], references: [id], onDelete: Restrict)
+  linphoneId Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([columnId, order])
+  @@index([phoneKey])
+}
+
+/// Linphone'dan bir marta olingan kontaktlar — o'chirilgan karta qayta qo'shilmasligi uchun.
+model LinphoneImport {
+  linphoneId Int      @id
+  importedAt DateTime @default(now())
+}
