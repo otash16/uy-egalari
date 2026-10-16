@@ -6,12 +6,17 @@ export const leadsRouter = Router();
 
 const TEXT_FIELDS = ["ownerName", "phone", "houseName", "olxUrl", "rentmeUrl", "note", "nextCall"] as const;
 type TextField = (typeof TEXT_FIELDS)[number];
+export const CALL_RESULTS = ["", "no_answer", "talked", "declined"];
 
 function pickLead(body: any) {
-  const data: Partial<Record<TextField, string>> & { phoneKey?: string } = {};
+  const data: Partial<Record<TextField, string>> & { phoneKey?: string; callResult?: string } = {};
   for (const f of TEXT_FIELDS) if (typeof body?.[f] === "string") data[f] = body[f].trim().slice(0, f === "note" ? 4000 : 1000);
   if (data.nextCall && !/^\d{4}-\d{2}-\d{2}$/.test(data.nextCall)) throw new HttpError(400, "Sana noto'g'ri");
   if (data.phone !== undefined) data.phoneKey = phoneKey(data.phone);
+  if (typeof body?.callResult === "string") {
+    if (!CALL_RESULTS.includes(body.callResult)) throw new HttpError(400, "Natija noto'g'ri");
+    data.callResult = body.callResult;
+  }
   return data;
 }
 

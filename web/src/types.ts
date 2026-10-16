@@ -15,13 +15,17 @@ export type Lead = {
   rentmeUrl: string;
   note: string;
   nextCall: string;
+  callResult: CallResult;
   columnId: string;
   order: number;
   createdAt: string;
   updatedAt: string;
 };
 
-export type LeadInput = Pick<Lead, "ownerName" | "phone" | "houseName" | "olxUrl" | "rentmeUrl" | "note" | "nextCall" | "columnId">;
+/** Uy egasi bilan suhbat natijasi — qo'lda tanlanadi. "" = tanlanmagan. */
+export type CallResult = "" | "no_answer" | "talked" | "declined";
+
+export type LeadInput = Pick<Lead, "ownerName" | "phone" | "houseName" | "olxUrl" | "rentmeUrl" | "note" | "nextCall" | "callResult" | "columnId">;
 
 export type Board = { columns: Column[]; leads: Lead[] };
 

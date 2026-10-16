@@ -3,6 +3,7 @@ import type { Call, Column, Lead, LeadInput } from "../types";
 import { CallLine } from "./CallRow";
 import { fmtDateTime, fmtPhone, normUrl, olxTitle, phoneKey, safeHref } from "../lib/text";
 import { Modal } from "./Modal";
+import { CALL_RESULTS } from "../lib/results";
 
 type Props = {
   lead?: Lead;
@@ -26,6 +27,7 @@ export function LeadModal({ lead, columnId, prefill, columns, leads, callsByKey,
     rentmeUrl: lead?.rentmeUrl ?? "",
     note: lead?.note ?? "",
     nextCall: lead?.nextCall ?? "",
+    callResult: lead?.callResult ?? "",
     columnId: lead?.columnId ?? columnId ?? columns[0]?.id ?? "",
     ...prefill,
     // Qidiruvdan OLX havolasi bilan ochilgan yangi kartada uy nomi darrov to'ladi
@@ -141,13 +143,23 @@ export function LeadModal({ lead, columnId, prefill, columns, leads, callsByKey,
             ))}
           </div>
         )}
-        <div className="row2">
+        <div className="row3">
           <div className="field">
             <label htmlFor="f_col">Bosqich</label>
             <select id="f_col" value={form.columnId} onChange={(e) => set("columnId", e.target.value)}>
               {columns.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="f_result">Natija</label>
+            <select id="f_result" value={form.callResult} onChange={(e) => set("callResult", e.target.value as LeadInput["callResult"])}>
+              {CALL_RESULTS.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
                 </option>
               ))}
             </select>

@@ -30,6 +30,8 @@ model Lead {
   note       String   @default("")
   /// Qayta qo'ng'iroq sanasi, YYYY-MM-DD yoki bo'sh.
   nextCall   String   @default("")
+  /// Qo'lda tanlangan natija: "" | no_answer | talked | declined
+  callResult String   @default("")
   order      Float
   columnId   String
   column     Column   @relation(fields: [columnId], references: [id], onDelete: Restrict)

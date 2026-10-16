@@ -1,6 +1,7 @@
 import type { DragEvent } from "react";
 import type { Call, Lead } from "../types";
 import { CallLine } from "./CallRow";
+import { resultLabel } from "../lib/results";
 import { digits, fmtDateTime, fmtPhone, isPhoneQuery, safeHref, todayStr } from "../lib/text";
 
 export function Highlight({ text, q }: { text: string; q: string }) {
@@ -51,8 +52,11 @@ export function LeadCard({ lead: l, calls, q, dragging, onOpen, onCopy, onDragSt
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
     >
-      <div className="name">
-        <Highlight text={l.ownerName || "Ismsiz"} q={q} />
+      <div className="name-row">
+        <div className="name">
+          <Highlight text={l.ownerName || "Ismsiz"} q={q} />
+        </div>
+        {l.callResult && <span className={"result " + l.callResult}>{resultLabel(l.callResult)}</span>}
       </div>
       {l.houseName && (
         <div className="house">
