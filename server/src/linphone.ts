@@ -45,12 +45,73 @@ function readContacts(): LinphoneContact[] {
   });
 }
 
-/** Kontaktlar soni va oxirgi id — o'zgarish bo'lganini arzon aniqlash uchun. */
+/** Kontaktlar va qo'ng'iroqlar soni/oxirgi id — o'zgarish bo'lganini arzon aniqlash uchun. */
 function signature(): string {
   return withLinphone((db) => {
-    const r = db.prepare("SELECT count(*) AS c, max(id) AS m FROM friend").get() as { c: number; m: number | null };
-    return `${r.c}:${r.m ?? 0}`;
+    const f = db.prepare("SELECT count(*) AS c, max(id) AS m FROM friend").get() as { c: number; m: number | null };
+    const c = db.prepare("SELECT count(*) AS c, max(id) AS m FROM conference_call").get() as { c: number; m: number | null };
+    return `${f.c}:${f.m ?? 0}|${c.c}:${c.m ?? 0}`;
   });
+}
+
+// Linphone (liblinphone) LinphoneCallStatus qiymatlari
+const CALL_STATUS = ["success", "aborted", "missed", "declined", "early_aborted", "accepted_elsewhere", "declined_elsewhere"];
+
+/** "2026-10-16 08:55:42" (Linphone UTC'da saqlaydi) → Date */
+const utc = (s: string | null) => (s ? new Date(s.replace(" ", "T") + "Z") : null);
+
+/** sip:938029987@pbx.powerapp.uz → "938029987" */
+const sipUser = (addr: string) => addr.replace(/^sips?:/i, "").split("@")[0];
+
+let callsRunning: Promise<number> | null = null;
+
+/** Linphone qo'ng'iroqlar tarixidan hali olinmagan qo'ng'iroqlarni bazaga yozadi. Yangi qo'ng'iroqlar sonini qaytaradi. */
+export function importCalls(): Promise<number> {
+  callsRunning ??= doImportCalls().finally(() => (callsRunning = null));
+  return callsRunning;
+}
+
+async function doImportCalls(): Promise<number> {
+  const last = await prisma.call.findFirst({ orderBy: { id: "desc" }, select: { id: true } });
+  const rows = withLinphone(
+    (db) =>
+      db
+        .prepare(
+          `SELECT c.id, c.direction, c.status, c.duration, c.start_time, c.connected_time,
+                  f.value AS from_addr, t.value AS to_addr
+             FROM conference_call c
+             JOIN sip_address f ON f.id = c.from_sip_address_id
+             JOIN sip_address t ON t.id = c.to_sip_address_id
+            WHERE c.id > ? ORDER BY c.id`,
+        )
+        .all(last?.id ?? 0) as {
+        id: number;
+        direction: number;
+        status: number;
+        duration: number | null;
+        start_time: string;
+        connected_time: string | null;
+        from_addr: string;
+        to_addr: string;
+      }[],
+  );
+  if (!rows.length) return 0;
+  await prisma.call.createMany({
+    data: rows.map((r) => {
+      const number = sipUser(r.direction === 1 ? r.from_addr : r.to_addr);
+      return {
+        id: r.id,
+        direction: r.direction === 1 ? "in" : "out",
+        status: CALL_STATUS[r.status] ?? "unknown",
+        number,
+        phoneKey: phoneKey(number),
+        startedAt: utc(r.start_time)!,
+        connectedAt: utc(r.connected_time),
+        duration: r.duration ?? 0,
+      };
+    }),
+  });
+  return rows.length;
 }
 
 let running: Promise<ImportResult> | null = null;
@@ -101,8 +162,10 @@ async function doImport(): Promise<ImportResult> {
   return { total: contacts.length, added: names.length, duplicates, names: names.reverse() };
 }
 
-/** Linphone bazasini har bir necha soniyada tekshiradi; yangi kontakt bo'lsa import qiladi. */
-export function watchLinphone(onAdded: (r: ImportResult) => void) {
+export type SyncResult = ImportResult & { calls: number };
+
+/** Linphone bazasini har bir necha soniyada tekshiradi; yangi kontakt yoki qo'ng'iroq bo'lsa import qiladi. */
+export function watchLinphone(onChange: (r: SyncResult) => void) {
   let last = "";
   let warned = false;
   const tick = async () => {
@@ -111,7 +174,8 @@ export function watchLinphone(onAdded: (r: ImportResult) => void) {
       if (sig === last) return;
       last = sig;
       const r = await importLinphone();
-      if (r.added) onAdded(r);
+      const calls = await importCalls();
+      if (r.added || calls) onChange({ ...r, calls });
       warned = false;
     } catch (e) {
       last = ""; // keyingi safar qayta urinib ko'ramiz

@@ -24,3 +24,24 @@ export type Lead = {
 export type LeadInput = Pick<Lead, "ownerName" | "phone" | "houseName" | "olxUrl" | "rentmeUrl" | "note" | "nextCall" | "columnId">;
 
 export type Board = { columns: Column[]; leads: Lead[] };
+
+export type CallStatus =
+  | "success"
+  | "aborted"
+  | "missed"
+  | "declined"
+  | "early_aborted"
+  | "accepted_elsewhere"
+  | "declined_elsewhere"
+  | "unknown";
+
+export type Call = {
+  id: number;
+  direction: "in" | "out";
+  status: CallStatus;
+  number: string;
+  phoneKey: string;
+  startedAt: string;
+  connectedAt: string | null;
+  duration: number;
+};

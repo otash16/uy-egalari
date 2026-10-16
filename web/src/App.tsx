@@ -1,16 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Board as BoardData, Column, Lead, LeadInput } from "./types";
+import type { Board as BoardData, Call, Column, Lead, LeadInput } from "./types";
 import { api } from "./lib/api";
 import { digits, matches, todayStr } from "./lib/text";
 import { Board } from "./components/Board";
 import { LeadModal } from "./components/LeadModal";
 import { ColumnModal } from "./components/ColumnModal";
+import { CallsModal } from "./components/CallsModal";
+import { groupCalls, isTalked, isToday } from "./lib/calls";
 
 type LeadDialog = { lead?: Lead; columnId?: string; prefill?: Partial<LeadInput> };
 type ColumnDialog = { column?: Column };
 
 export default function App() {
   const [board, setBoard] = useState<BoardData | null>(null);
+  const [calls, setCalls] = useState<Call[]>([]);
+  const [callsOpen, setCallsOpen] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [q, setQ] = useState("");
   const [leadDialog, setLeadDialog] = useState<LeadDialog | null>(null);
@@ -29,7 +33,9 @@ export default function App() {
 
   const reload = useCallback(async () => {
     try {
-      setBoard(await api.board());
+      const [b, c] = await Promise.all([api.board(), api.calls()]);
+      setBoard(b);
+      setCalls(c);
       setLoadError("");
     } catch (e) {
       setLoadError((e as Error).message);
@@ -44,8 +50,8 @@ export default function App() {
   useEffect(() => {
     const es = new EventSource("/api/events");
     es.addEventListener("linphone", (e) => {
-      const r = JSON.parse((e as MessageEvent).data) as { added: number; names: string[] };
-      showToast(r.added === 1 ? `Linphone'dan yangi kontakt: ${r.names[0]}` : `Linphone'dan ${r.added} ta yangi kontakt qo'shildi`);
+      const r = JSON.parse((e as MessageEvent).data) as { added: number; names: string[]; calls: number };
+      if (r.added) showToast(r.added === 1 ? `Linphone'dan yangi kontakt: ${r.names[0]}` : `Linphone'dan ${r.added} ta yangi kontakt qo'shildi`);
       reload();
     });
     // Server qayta ishga tushganda ulanish tiklanadi — orada o'tkazib yuborilgan o'zgarishlarni olamiz
@@ -90,6 +96,7 @@ export default function App() {
 
   const columns = board?.columns ?? [];
   const leads = board?.leads ?? [];
+  const callsByKey = useMemo(() => groupCalls(calls), [calls]);
 
   const stats = useMemo(() => {
     const today = todayStr();
@@ -98,8 +105,10 @@ export default function App() {
       onRentmi: leads.filter((l) => l.rentmeUrl.trim()).length,
       due: leads.filter((l) => l.nextCall && l.nextCall <= today).length,
       found: q ? leads.filter((l) => matches(l, q)).length : 0,
+      callsToday: calls.filter((c) => isToday(c.startedAt)).length,
+      talkedToday: calls.filter((c) => isToday(c.startedAt) && isTalked(c)).length,
     };
-  }, [leads, q]);
+  }, [leads, calls, q]);
 
   function moveLead(id: string, columnId: string, beforeId: string | null) {
     const lead = leads.find((l) => l.id === id);
@@ -157,6 +166,9 @@ export default function App() {
           )}
         </div>
         <div className="actions">
+          <button className="btn" type="button" onClick={() => setCallsOpen(true)}>
+            Qo'ng'iroqlar
+          </button>
           <button className="btn" type="button" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen}>
             Ma'lumotlar ▾
           </button>
@@ -165,7 +177,7 @@ export default function App() {
           </button>
           {menuOpen && (
             <div className="menu" onClick={() => setMenuOpen(false)}>
-              <button type="button" onClick={() => run(() => api.importLinphone(), (r) => (r.added ? `Linphone'dan ${r.added} ta yangi kontakt qo'shildi` : "Linphone'da yangi kontakt yo'q"))}>
+              <button type="button" onClick={() => run(() => api.importLinphone(), (r) => (r.added || r.calls ? `Linphone: ${r.added} ta yangi kontakt, ${r.calls} ta yangi qo'ng'iroq` : "Linphone'da yangi narsa yo'q"))}>
                 Linphone'dan yangilash
                 <small>Yangi kontaktlar «{columns[0]?.name ?? "Yangi"}» ustuniga qo'shiladi</small>
               </button>
@@ -208,8 +220,11 @@ export default function App() {
               Rentmi'ga joylangan <b>{stats.onRentmi}</b>
             </span>
             <span className={stats.due ? "due" : undefined}>
-              Bugun qo'ng'iroq <b>{stats.due}</b>
+              Qayta qo'ng'iroq kerak <b>{stats.due}</b>
             </span>
+            <button type="button" className="stat-link" onClick={() => setCallsOpen(true)}>
+              Bugun qo'ng'iroq <b>{stats.callsToday}</b>, gaplashildi <b>{stats.talkedToday}</b>
+            </button>
           </>
         ) : (
           <span>{loadError ? "Ma'lumot yo'q" : "Yuklanmoqda…"}</span>
@@ -229,6 +244,7 @@ export default function App() {
         <Board
           columns={columns}
           leads={leads}
+          callsByKey={callsByKey}
           q={q}
           onOpenLead={(lead) => setLeadDialog({ lead })}
           onAddIn={(columnId) => setLeadDialog({ columnId })}
@@ -245,6 +261,7 @@ export default function App() {
           {...leadDialog}
           columns={columns}
           leads={leads}
+          callsByKey={callsByKey}
           onClose={() => setLeadDialog(null)}
           onSave={(data, id) =>
             run(() => (id ? api.updateLead(id, data) : api.createLead(data)), id ? "Saqlandi" : "Qo'shildi")
@@ -272,6 +289,22 @@ export default function App() {
               (r) => (r.moved ? `Ustun o'chirildi, ${r.moved} ta karta «${r.movedTo}» ga o'tdi` : "Ustun o'chirildi"),
             )
           }
+        />
+      )}
+
+      {callsOpen && (
+        <CallsModal
+          calls={calls}
+          leads={leads}
+          onClose={() => setCallsOpen(false)}
+          onOpenLead={(lead) => {
+            setCallsOpen(false);
+            setLeadDialog({ lead });
+          }}
+          onCreateFrom={(number) => {
+            setCallsOpen(false);
+            setLeadDialog({ prefill: { phone: number } });
+          }}
         />
       )}
 

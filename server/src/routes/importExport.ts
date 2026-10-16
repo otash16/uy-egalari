@@ -1,13 +1,14 @@
 import { Router } from "express";
 import { prisma, topOrder } from "../db.js";
-import { importLinphone } from "../linphone.js";
+import { importCalls, importLinphone } from "../linphone.js";
 import { csvCell, HttpError, olxTitle, parseCsv, phoneKey } from "../lib/text.js";
 
 export const importExportRouter = Router();
 
 /** Linphone'dagi yangi kontaktlarni qo'lda import qilish (menyudagi tugma). */
 importExportRouter.post("/import/linphone", async (_req, res) => {
-  res.json(await importLinphone());
+  const r = await importLinphone();
+  res.json({ ...r, calls: await importCalls() });
 });
 
 const CSV_HEAD = ["Ism", "Telefon", "Uy nomi", "OLX", "Rentmi", "Bosqich", "Qayta qo'ng'iroq", "Izoh", "O'zgartirilgan"];

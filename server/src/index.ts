@@ -24,6 +24,9 @@ app.get("/api/board", async (_req, res) => {
   ]);
   res.json({ columns, leads });
 });
+app.get("/api/calls", async (_req, res) => {
+  res.json(await prisma.call.findMany({ orderBy: { startedAt: "desc" }, take: 5000 }));
+});
 app.get("/api/events", eventsHandler);
 app.use("/api/columns", columnsRouter);
 app.use("/api/leads", leadsRouter);
@@ -49,7 +52,8 @@ app.use(onError);
 await ensureDefaultColumns();
 // Linphone'ga yangi kontakt qo'shilsa avtomatik doskaga tushadi va ochiq sahifa yangilanadi
 watchLinphone((r) => {
-  console.log(`Linphone: ${r.added} ta yangi kontakt — ${r.names.join(", ")}`);
+  if (r.added) console.log(`Linphone: ${r.added} ta yangi kontakt — ${r.names.join(", ")}`);
+  if (r.calls) console.log(`Linphone: ${r.calls} ta yangi qo'ng'iroq`);
   broadcast("linphone", r);
 });
 app.listen(PORT, "127.0.0.1", () => {

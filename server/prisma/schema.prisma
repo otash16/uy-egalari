@@ -46,3 +46,23 @@ model LinphoneImport {
   linphoneId Int      @id
   importedAt DateTime @default(now())
 }
+
+/// Linphone qo'ng'iroqlar tarixidan olingan qo'ng'iroq. Kartaga telefon raqami (phoneKey) orqali bog'lanadi.
+model Call {
+  /// Linphone'dagi conference_call.id
+  id          Int       @id
+  /// "out" — chiquvchi, "in" — kiruvchi
+  direction   String
+  /// success | aborted | missed | declined | early_aborted | accepted_elsewhere | declined_elsewhere
+  status      String
+  /// Qarshi tomon raqami (SIP manzilning user qismi)
+  number      String
+  phoneKey    String
+  startedAt   DateTime
+  connectedAt DateTime?
+  /// Gaplashilgan vaqt, soniyada
+  duration    Int       @default(0)
+
+  @@index([phoneKey])
+  @@index([startedAt])
+}

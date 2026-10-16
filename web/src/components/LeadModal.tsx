@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from "react";
-import type { Column, Lead, LeadInput } from "../types";
+import type { Call, Column, Lead, LeadInput } from "../types";
+import { CallLine } from "./CallRow";
 import { fmtDateTime, fmtPhone, normUrl, olxTitle, phoneKey, safeHref } from "../lib/text";
 import { Modal } from "./Modal";
 
@@ -9,13 +10,14 @@ type Props = {
   prefill?: Partial<LeadInput>;
   columns: Column[];
   leads: Lead[];
+  callsByKey: Map<string, Call[]>;
   onClose: () => void;
   onSave: (data: LeadInput, id?: string) => Promise<boolean>;
   onDelete: (id: string) => Promise<boolean>;
   onOpenOther: (lead: Lead) => void;
 };
 
-export function LeadModal({ lead, columnId, prefill, columns, leads, onClose, onSave, onDelete, onOpenOther }: Props) {
+export function LeadModal({ lead, columnId, prefill, columns, leads, callsByKey, onClose, onSave, onDelete, onOpenOther }: Props) {
   const [form, setForm] = useState<LeadInput>(() => ({
     ownerName: lead?.ownerName ?? "",
     phone: lead?.phone ? fmtPhone(lead.phone) : "",
@@ -71,6 +73,8 @@ export function LeadModal({ lead, columnId, prefill, columns, leads, onClose, on
     setSaving(false);
     if (ok) onClose();
   }
+
+  const calls = callsByKey.get(phoneKey(form.phone)) ?? [];
 
   const colName = (id: string) => columns.find((c) => c.id === id)?.name ?? "—";
 
@@ -153,6 +157,18 @@ export function LeadModal({ lead, columnId, prefill, columns, leads, onClose, on
             <input id="f_next" type="date" value={form.nextCall} onChange={(e) => set("nextCall", e.target.value)} />
           </div>
         </div>
+        {calls.length > 0 && (
+          <div className="field">
+            <span className="label">Qo'ng'iroqlar · {calls.length} ta</span>
+            <ul className="call-list compact">
+              {calls.map((c) => (
+                <li key={c.id}>
+                  <CallLine call={c} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="field">
           <label htmlFor="f_note">Izoh</label>
           <textarea id="f_note" value={form.note} onChange={(e) => set("note", e.target.value)} placeholder="Narxi, gaplashilgan vaqt, e'tirozlar…" />

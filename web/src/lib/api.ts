@@ -1,4 +1,4 @@
-import type { Board, Column, Lead, LeadInput } from "../types";
+import type { Board, Call, Column, Lead, LeadInput } from "../types";
 
 async function request<T>(method: string, url: string, body?: unknown, contentType = "application/json"): Promise<T> {
   let res: Response;
@@ -18,6 +18,7 @@ async function request<T>(method: string, url: string, body?: unknown, contentTy
 
 export const api = {
   board: () => request<Board>("GET", "/api/board"),
+  calls: () => request<Call[]>("GET", "/api/calls"),
 
   createLead: (data: LeadInput) => request<Lead>("POST", "/api/leads", data),
   updateLead: (id: string, data: Partial<LeadInput>) => request<Lead>("PATCH", `/api/leads/${id}`, data),
@@ -30,6 +31,6 @@ export const api = {
   moveColumn: (id: string, dir: -1 | 1) => request<{ ok: true }>("POST", `/api/columns/${id}/move`, { dir }),
   deleteColumn: (id: string) => request<{ ok: true; movedTo: string | null; moved: number }>("DELETE", `/api/columns/${id}`),
 
-  importLinphone: () => request<{ total: number; added: number; duplicates: number }>("POST", "/api/import/linphone"),
+  importLinphone: () => request<{ total: number; added: number; duplicates: number; calls: number }>("POST", "/api/import/linphone"),
   importCsv: (text: string) => request<{ created: number; updated: number }>("POST", "/api/import/csv", text, "text/csv"),
 };

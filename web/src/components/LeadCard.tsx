@@ -1,5 +1,6 @@
 import type { DragEvent } from "react";
-import type { Lead } from "../types";
+import type { Call, Lead } from "../types";
+import { CallLine } from "./CallRow";
 import { digits, fmtDateTime, fmtPhone, isPhoneQuery, safeHref, todayStr } from "../lib/text";
 
 export function Highlight({ text, q }: { text: string; q: string }) {
@@ -17,6 +18,8 @@ export function Highlight({ text, q }: { text: string; q: string }) {
 
 type Props = {
   lead: Lead;
+  /** Shu raqam bilan bo'lgan qo'ng'iroqlar, yangisi birinchi */
+  calls?: Call[];
   q: string;
   dragging: boolean;
   onOpen: () => void;
@@ -25,7 +28,7 @@ type Props = {
   onDragEnd: () => void;
 };
 
-export function LeadCard({ lead: l, q, dragging, onOpen, onCopy, onDragStart, onDragEnd }: Props) {
+export function LeadCard({ lead: l, calls, q, dragging, onOpen, onCopy, onDragStart, onDragEnd }: Props) {
   const today = todayStr();
   const phone = fmtPhone(l.phone);
   const phoneHit = isPhoneQuery(q) && digits(l.phone).includes(digits(q));
@@ -87,13 +90,19 @@ export function LeadCard({ lead: l, q, dragging, onOpen, onCopy, onDragStart, on
           <span className="chip miss">Rentmi yo'q</span>
         )}
       </div>
+      {calls && calls.length > 0 && (
+        <div className="card-calls" title={`Jami ${calls.length} ta qo'ng'iroq`}>
+          <CallLine call={calls[0]} />
+          {calls.length > 1 && <span className="total">· {calls.length} ta</span>}
+        </div>
+      )}
       {l.note && (
         <div className="note">
           <Highlight text={l.note} q={q} />
         </div>
       )}
       <div className="meta">
-        {due && <>Qo'ng'iroq: {due} · </>}
+        {due && <>Qayta qo'ng'iroq: {due} · </>}
         {fmtDateTime(l.updatedAt)}
       </div>
     </article>

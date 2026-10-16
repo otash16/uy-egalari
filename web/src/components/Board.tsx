@@ -1,11 +1,12 @@
 import { Fragment, useState, type DragEvent } from "react";
-import type { Column, Lead } from "../types";
+import type { Call, Column, Lead } from "../types";
 import { matches } from "../lib/text";
 import { LeadCard } from "./LeadCard";
 
 type Props = {
   columns: Column[];
   leads: Lead[];
+  callsByKey: Map<string, Call[]>;
   q: string;
   onOpenLead: (lead: Lead) => void;
   onAddIn: (columnId: string) => void;
@@ -17,7 +18,7 @@ type Props = {
 
 type Drop = { columnId: string; beforeId: string | null };
 
-export function Board({ columns, leads, q, onOpenLead, onAddIn, onEditColumn, onNewColumn, onMove, onCopy }: Props) {
+export function Board({ columns, leads, callsByKey, q, onOpenLead, onAddIn, onEditColumn, onNewColumn, onMove, onCopy }: Props) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [drop, setDrop] = useState<Drop | null>(null);
 
@@ -82,6 +83,7 @@ export function Board({ columns, leads, q, onOpenLead, onAddIn, onEditColumn, on
                   {isOver && drop?.beforeId === l.id && <div className="drop-line" />}
                   <LeadCard
                     lead={l}
+                    calls={l.phoneKey ? callsByKey.get(l.phoneKey) : undefined}
                     q={q}
                     dragging={dragId === l.id}
                     onOpen={() => onOpenLead(l)}
