@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Board as BoardData, Call, Column, Lead, LeadInput } from "./types";
 import { api } from "./lib/api";
-import { digits, matches, todayStr } from "./lib/text";
+import { digits, isPhoneQuery, matches, phoneKey, todayStr } from "./lib/text";
 import { Board } from "./components/Board";
 import { LeadModal } from "./components/LeadModal";
 import { ColumnModal } from "./components/ColumnModal";
 import { CallsModal } from "./components/CallsModal";
+import { SearchCalls, type UnknownNumber } from "./components/SearchCalls";
 import { groupCalls, isTalked, isToday } from "./lib/calls";
 
 type LeadDialog = { lead?: Lead; columnId?: string; prefill?: Partial<LeadInput> };
@@ -97,6 +98,19 @@ export default function App() {
   const columns = board?.columns ?? [];
   const leads = board?.leads ?? [];
   const callsByKey = useMemo(() => groupCalls(calls), [calls]);
+
+  // Raqam bilan qidirilganda: doskada kartasi yo'q, lekin qo'ng'iroq bo'lgan raqamlar
+  const unknownNumbers = useMemo<UnknownNumber[]>(() => {
+    if (!isPhoneQuery(q)) return [];
+    const dq = digits(q);
+    const known = new Set(leads.map((l) => l.phoneKey).filter(Boolean));
+    const out: UnknownNumber[] = [];
+    for (const [key, list] of callsByKey) {
+      if (known.has(key)) continue;
+      if (digits(list[0].number).includes(dq) || key.includes(phoneKey(dq))) out.push({ phoneKey: key, number: list[0].number, calls: list });
+    }
+    return out.sort((a, b) => b.calls[0].startedAt.localeCompare(a.calls[0].startedAt));
+  }, [q, leads, callsByKey]);
 
   const stats = useMemo(() => {
     const today = todayStr();
@@ -244,6 +258,8 @@ export default function App() {
           </button>
         </div>
       )}
+
+      {board && <SearchCalls items={unknownNumbers} onCreate={(number) => setLeadDialog({ prefill: { phone: number } })} />}
 
       {board && (
         <Board
