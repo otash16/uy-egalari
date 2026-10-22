@@ -5,18 +5,19 @@ import { fmtPhone } from "../lib/text";
 import { CallLine } from "./CallRow";
 import { Modal } from "./Modal";
 
-type Tab = "today" | "all" | "unknown";
+type Tab = "today" | "mine" | "all" | "unknown";
 
 type Props = {
   calls: Call[];
   leads: Lead[];
+  me: string;
   onClose: () => void;
   onOpenLead: (lead: Lead) => void;
   onCreateFrom: (number: string) => void;
 };
 
-/** Linphone'dan olingan barcha qo'ng'iroqlar; doskada yo'q raqamlardan karta yaratish mumkin. */
-export function CallsModal({ calls, leads, onClose, onOpenLead, onCreateFrom }: Props) {
+/** Hamma operatorlarning softphone'laridan olingan qo'ng'iroqlar; doskada yo'q raqamlardan karta yaratish mumkin. */
+export function CallsModal({ calls, leads, me, onClose, onOpenLead, onCreateFrom }: Props) {
   const [tab, setTab] = useState<Tab>("today");
 
   const leadByKey = useMemo(() => {
@@ -27,10 +28,12 @@ export function CallsModal({ calls, leads, onClose, onOpenLead, onCreateFrom }: 
 
   const today = calls.filter((c) => isToday(c.startedAt));
   const unknown = calls.filter((c) => !leadByKey.has(c.phoneKey));
-  const list = tab === "today" ? today : tab === "unknown" ? unknown : calls;
+  const mine = calls.filter((c) => c.operator === me);
+  const list = tab === "today" ? today : tab === "mine" ? mine : tab === "unknown" ? unknown : calls;
 
   const tabs: [Tab, string, number][] = [
     ["today", "Bugun", today.length],
+    ["mine", "Meniki", mine.length],
     ["all", "Hammasi", calls.length],
     ["unknown", "Doskada yo'q", unknown.length],
   ];
@@ -70,7 +73,7 @@ export function CallsModal({ calls, leads, onClose, onOpenLead, onCreateFrom }: 
                     </button>
                   )}
                 </div>
-                <CallLine call={c} />
+                <CallLine call={c} me={me} />
               </li>
             );
           })}

@@ -2,10 +2,15 @@
   "name": "uy-egalari",
   "private": true,
   "scripts": {
-    "setup": "yarn --cwd server install && yarn --cwd web install && yarn --cwd server db:deploy && yarn --cwd web build",
+    "setup": "yarn --cwd server install && yarn --cwd web install && yarn --cwd agent install && yarn --cwd server db:deploy && yarn --cwd web build",
     "start": "yarn --cwd web build && yarn --cwd server start",
     "dev": "concurrently -n api,web -c green,blue \"yarn --cwd server dev\" \"yarn --cwd web dev\"",
-    "backup": "node -e \"const fs=require('fs');fs.mkdirSync('backups',{recursive:true});const d=new Date().toISOString().slice(0,16).replace(/[T:]/g,'-');fs.copyFileSync('server/prisma/dev.db','backups/dev-'+d+'.db');console.log('backups/dev-'+d+'.db')\""
+    "backup": "node -e \"const fs=require('fs');fs.mkdirSync('backups',{recursive:true});const d=new Date().toISOString().slice(0,16).replace(/[T:]/g,'-');fs.copyFileSync('server/prisma/dev.db','backups/dev-'+d+'.db');console.log('backups/dev-'+d+'.db')\"",
+    "typecheck": "yarn --cwd server typecheck && yarn --cwd agent typecheck && yarn --cwd web build",
+    "service:install": "zsh scripts/install-service.sh",
+    "service:uninstall": "zsh scripts/install-service.sh uninstall",
+    "agent:pack": "zsh scripts/pack-agent.sh",
+    "ip": "ipconfig getifaddr en0 || ipconfig getifaddr en1"
   },
   "devDependencies": {
     "concurrently": "9.2.1"

@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from "react";
-import type { Call, Column, Lead, LeadInput } from "../types";
+import type { Call, Column, Lead, LeadInput, Operator } from "../types";
 import { CallLine } from "./CallRow";
 import { fmtDateTime, fmtPhone, normUrl, olxTitle, phoneKey, safeHref } from "../lib/text";
 import { Modal } from "./Modal";
@@ -10,6 +10,9 @@ type Props = {
   columnId?: string;
   prefill?: Partial<LeadInput>;
   columns: Column[];
+  operators: Operator[];
+  /** Brauzerda tanlangan operator — yangi karta shu nomga yoziladi */
+  me: string;
   leads: Lead[];
   callsByKey: Map<string, Call[]>;
   onClose: () => void;
@@ -18,7 +21,7 @@ type Props = {
   onOpenOther: (lead: Lead) => void;
 };
 
-export function LeadModal({ lead, columnId, prefill, columns, leads, callsByKey, onClose, onSave, onDelete, onOpenOther }: Props) {
+export function LeadModal({ lead, columnId, prefill, columns, operators, me, leads, callsByKey, onClose, onSave, onDelete, onOpenOther }: Props) {
   const [form, setForm] = useState<LeadInput>(() => ({
     ownerName: lead?.ownerName ?? "",
     phone: lead?.phone ? fmtPhone(lead.phone) : "",
@@ -28,6 +31,7 @@ export function LeadModal({ lead, columnId, prefill, columns, leads, callsByKey,
     note: lead?.note ?? "",
     nextCall: lead?.nextCall ?? "",
     callResult: lead?.callResult ?? "",
+    operator: lead?.operator ?? me,
     columnId: lead?.columnId ?? columnId ?? columns[0]?.id ?? "",
     ...prefill,
     // Qidiruvdan OLX havolasi bilan ochilgan yangi kartada uy nomi darrov to'ladi
@@ -138,7 +142,7 @@ export function LeadModal({ lead, columnId, prefill, columns, leads, callsByKey,
                 <button type="button" onClick={() => onOpenOther(l)}>
                   {l.ownerName || "Ismsiz"}
                 </button>{" "}
-                ({colName(l.columnId)})
+                ({colName(l.columnId)}{l.operator ? `, mas'ul: ${l.operator}` : ""})
               </span>
             ))}
           </div>
@@ -169,13 +173,26 @@ export function LeadModal({ lead, columnId, prefill, columns, leads, callsByKey,
             <input id="f_next" type="date" value={form.nextCall} onChange={(e) => set("nextCall", e.target.value)} />
           </div>
         </div>
+        <div className="field">
+          <label htmlFor="f_op">Mas'ul operator</label>
+          <select id="f_op" value={form.operator} onChange={(e) => set("operator", e.target.value)}>
+            <option value="">— belgilanmagan —</option>
+            {operators.map((o) => (
+              <option key={o.name} value={o.name}>
+                {o.name}
+                {o.name === me ? " (men)" : ""}
+              </option>
+            ))}
+            {form.operator && !operators.some((o) => o.name === form.operator) && <option value={form.operator}>{form.operator}</option>}
+          </select>
+        </div>
         {calls.length > 0 && (
           <div className="field">
             <span className="label">Qo'ng'iroqlar · {calls.length} ta</span>
             <ul className="call-list compact">
               {calls.map((c) => (
                 <li key={c.id}>
-                  <CallLine call={c} />
+                  <CallLine call={c} me={me} />
                 </li>
               ))}
             </ul>

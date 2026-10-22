@@ -1,4 +1,4 @@
-import type { Board, Call, Column, Lead, LeadInput } from "../types";
+import type { Board, Call, Column, Lead, LeadInput, Operator, SyncResult } from "../types";
 
 async function request<T>(method: string, url: string, body?: unknown, contentType = "application/json"): Promise<T> {
   let res: Response;
@@ -9,7 +9,7 @@ async function request<T>(method: string, url: string, body?: unknown, contentTy
       body: body === undefined ? undefined : contentType === "application/json" ? JSON.stringify(body) : (body as string),
     });
   } catch {
-    throw new Error("Serverga ulanib bo'lmadi. Terminalda «yarn start» ishlab turganini tekshiring.");
+    throw new Error("Serverga ulanib bo'lmadi. Server turgan kompyuterda «yarn start» ishlab turganini tekshiring.");
   }
   const data = await res.json().catch(() => null);
   if (!res.ok) throw new Error(data?.error ?? `Server xatosi (${res.status})`);
@@ -31,6 +31,9 @@ export const api = {
   moveColumn: (id: string, dir: -1 | 1) => request<{ ok: true }>("POST", `/api/columns/${id}/move`, { dir }),
   deleteColumn: (id: string) => request<{ ok: true; movedTo: string | null; moved: number }>("DELETE", `/api/columns/${id}`),
 
-  importLinphone: () => request<{ total: number; added: number; duplicates: number; calls: number }>("POST", "/api/import/linphone"),
+  operators: () => request<Operator[]>("GET", "/api/operators"),
+  createOperator: (name: string) => request<Operator>("POST", "/api/operators", { name }),
+
+  syncLocal: () => request<SyncResult>("POST", "/api/sync/local"),
   importCsv: (text: string) => request<{ created: number; updated: number }>("POST", "/api/import/csv", text, "text/csv"),
 };

@@ -1,0 +1,15 @@
+{
+  "name": "uy-egalari-agent",
+  "private": true,
+  "type": "module",
+  "description": "Softphone (Linphone / MicroSIP) tarixini Uy egalari doskasi serveriga yuboradi",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "24.7.2",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3"
+  }
+}

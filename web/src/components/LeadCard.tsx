@@ -1,6 +1,7 @@
 import type { DragEvent } from "react";
 import type { Call, Lead } from "../types";
 import { CallLine } from "./CallRow";
+import { OpBadge } from "./OpBadge";
 import { resultLabel } from "../lib/results";
 import { digits, fmtDateTime, fmtPhone, isPhoneQuery, safeHref, todayStr } from "../lib/text";
 
@@ -22,6 +23,8 @@ type Props = {
   /** Shu raqam bilan bo'lgan qo'ng'iroqlar, yangisi birinchi */
   calls?: Call[];
   q: string;
+  /** Brauzerda tanlangan operator — o'z kartalari alohida ko'rinadi */
+  me: string;
   dragging: boolean;
   onOpen: () => void;
   onCopy: (text: string) => void;
@@ -29,7 +32,7 @@ type Props = {
   onDragEnd: () => void;
 };
 
-export function LeadCard({ lead: l, calls, q, dragging, onOpen, onCopy, onDragStart, onDragEnd }: Props) {
+export function LeadCard({ lead: l, calls, q, me, dragging, onOpen, onCopy, onDragStart, onDragEnd }: Props) {
   const today = todayStr();
   const phone = fmtPhone(l.phone);
   const phoneHit = isPhoneQuery(q) && digits(l.phone).includes(digits(q));
@@ -43,7 +46,7 @@ export function LeadCard({ lead: l, calls, q, dragging, onOpen, onCopy, onDragSt
 
   return (
     <article
-      className={"card" + (dragging ? " dragging" : "")}
+      className={"card" + (dragging ? " dragging" : "") + (l.operator && me && l.operator !== me ? " foreign" : "")}
       data-id={l.id}
       draggable
       tabIndex={0}
@@ -56,7 +59,10 @@ export function LeadCard({ lead: l, calls, q, dragging, onOpen, onCopy, onDragSt
         <div className="name">
           <Highlight text={l.ownerName || "Ismsiz"} q={q} />
         </div>
-        {l.callResult && <span className={"result " + l.callResult}>{resultLabel(l.callResult)}</span>}
+        <span className="tags">
+          {l.callResult && <span className={"result " + l.callResult}>{resultLabel(l.callResult)}</span>}
+          <OpBadge name={l.operator} me={me} />
+        </span>
       </div>
       {l.houseName && (
         <div className="house">
@@ -96,7 +102,7 @@ export function LeadCard({ lead: l, calls, q, dragging, onOpen, onCopy, onDragSt
       </div>
       {calls && calls.length > 0 && (
         <div className="card-calls" title={`Jami ${calls.length} ta qo'ng'iroq`}>
-          <CallLine call={calls[0]} />
+          <CallLine call={calls[0]} me={me} />
           {calls.length > 1 && <span className="total">· {calls.length} ta</span>}
         </div>
       )}

@@ -5,6 +5,15 @@ export type Column = {
   order: number;
 };
 
+/** Call-center operatori. Karta va qo'ng'iroqlar nomi bo'yicha bog'lanadi. */
+export type Operator = {
+  name: string;
+  color: number;
+  softphone: "linphone" | "microsip" | "";
+  lastSyncAt: string | null;
+  createdAt: string;
+};
+
 export type Lead = {
   id: string;
   ownerName: string;
@@ -16,6 +25,8 @@ export type Lead = {
   note: string;
   nextCall: string;
   callResult: CallResult;
+  /** Mas'ul operator (Operator.name), "" = belgilanmagan */
+  operator: string;
   columnId: string;
   order: number;
   createdAt: string;
@@ -25,9 +36,9 @@ export type Lead = {
 /** Uy egasi bilan suhbat natijasi — qo'lda tanlanadi. "" = tanlanmagan. */
 export type CallResult = "" | "no_answer" | "talked" | "declined";
 
-export type LeadInput = Pick<Lead, "ownerName" | "phone" | "houseName" | "olxUrl" | "rentmeUrl" | "note" | "nextCall" | "callResult" | "columnId">;
+export type LeadInput = Pick<Lead, "ownerName" | "phone" | "houseName" | "olxUrl" | "rentmeUrl" | "note" | "nextCall" | "callResult" | "columnId" | "operator">;
 
-export type Board = { columns: Column[]; leads: Lead[] };
+export type Board = { columns: Column[]; leads: Lead[]; operators: Operator[]; localOperator: string | null };
 
 export type CallStatus =
   | "success"
@@ -40,7 +51,9 @@ export type CallStatus =
   | "unknown";
 
 export type Call = {
-  id: number;
+  id: string;
+  /** Kimning softphone'idan */
+  operator: string;
   direction: "in" | "out";
   status: CallStatus;
   number: string;
@@ -48,4 +61,23 @@ export type Call = {
   startedAt: string;
   connectedAt: string | null;
   duration: number;
+};
+
+/** Serverdan: operator boshqa operatorning uy egasini qo'shdi yoki unga qo'ng'iroq qildi. */
+export type SyncWarning = {
+  kind: "contact" | "call";
+  operator: string;
+  number: string;
+  lead: { id: string; ownerName: string; operator: string; columnName: string };
+  lastCall: { operator: string; startedAt: string; status: string } | null;
+};
+
+export type SyncResult = {
+  operator: string;
+  total: number;
+  added: number;
+  duplicates: number;
+  names: string[];
+  calls: number;
+  warnings: SyncWarning[];
 };

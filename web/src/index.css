@@ -187,3 +187,39 @@ mark { background: var(--warn-soft); color: inherit; border-radius: 3px; padding
 .result.talked { background: var(--accent-soft); color: var(--accent); }
 .result.no_answer { background: var(--warn-soft); color: var(--warn); }
 .result.declined { background: var(--danger-soft); color: var(--danger); }
+
+/* operatorlar */
+.op { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; line-height: 18px; padding: 0 7px; border-radius: 999px; background: color-mix(in srgb, var(--op) 16%, transparent); color: var(--op); white-space: nowrap; }
+.op::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--op); }
+.op.me { outline: 1px solid color-mix(in srgb, var(--op) 45%, transparent); }
+.card .tags { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; flex: 0 0 auto; }
+.card.foreign { border-left: 3px solid var(--line-2); }
+.me-btn { padding: 0 10px; }
+.filters { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.chip-f { height: 24px; padding: 0 9px; border-radius: 999px; border: 1px solid var(--line); background: transparent; font-size: 12px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 5px; }
+.chip-f:hover { background: var(--surface-2); }
+.chip-f.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.chip-f b { color: inherit; }
+.online { width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); }
+.online.yes { background: var(--c3); box-shadow: 0 0 0 2px color-mix(in srgb, var(--c3) 25%, transparent); }
+
+/* ogohlantirishlar: boshqa operatorning uy egasiga qo'ng'iroq */
+.alerts { margin: 12px 16px 0; display: flex; flex-direction: column; gap: 6px; max-height: 32vh; overflow-y: auto; flex: 0 0 auto; }
+.alert { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 9px 12px; border-radius: 10px; background: var(--danger-soft); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent); font-size: 13px; }
+.alert-ic { font-size: 16px; }
+.alert-text { flex: 1 1 320px; color: var(--ink); }
+.alert-text b { color: var(--danger); }
+.alert .btn { height: 30px; padding: 0 10px; font-size: 13px; }
+.alert .icon-btn { color: var(--danger); }
+
+/* "Siz kimsiz?" */
+.op-pick { display: flex; flex-direction: column; gap: 12px; padding: 8px 18px 18px; }
+.op-list { display: flex; flex-direction: column; gap: 6px; }
+.op-choice { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); font-weight: 600; text-align: left; }
+.op-choice:hover { border-color: var(--line-2); background: var(--surface); }
+.op-choice.on { border-color: var(--op); background: color-mix(in srgb, var(--op) 10%, transparent); }
+.op-choice small { margin-left: auto; font-weight: 400; color: var(--muted); }
+.op-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--op); }
+.op-new { display: flex; gap: 8px; }
+.op-new input { flex: 1; height: 38px; border: 1px solid var(--line-2); border-radius: 9px; background: var(--surface-2); padding: 0 11px; outline: none; }
+.op-new input:focus { border-color: var(--accent); background: var(--surface); }

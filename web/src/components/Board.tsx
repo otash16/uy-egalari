@@ -8,6 +8,7 @@ type Props = {
   leads: Lead[];
   callsByKey: Map<string, Call[]>;
   q: string;
+  me: string;
   onOpenLead: (lead: Lead) => void;
   onAddIn: (columnId: string) => void;
   onEditColumn: (column: Column) => void;
@@ -18,7 +19,7 @@ type Props = {
 
 type Drop = { columnId: string; beforeId: string | null };
 
-export function Board({ columns, leads, callsByKey, q, onOpenLead, onAddIn, onEditColumn, onNewColumn, onMove, onCopy }: Props) {
+export function Board({ columns, leads, callsByKey, q, me, onOpenLead, onAddIn, onEditColumn, onNewColumn, onMove, onCopy }: Props) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [drop, setDrop] = useState<Drop | null>(null);
 
@@ -85,6 +86,7 @@ export function Board({ columns, leads, callsByKey, q, onOpenLead, onAddIn, onEd
                     lead={l}
                     calls={l.phoneKey ? callsByKey.get(l.phoneKey) : undefined}
                     q={q}
+                    me={me}
                     dragging={dragId === l.id}
                     onOpen={() => onOpenLead(l)}
                     onCopy={onCopy}

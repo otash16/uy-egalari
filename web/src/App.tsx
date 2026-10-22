@@ -1,16 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Board as BoardData, Call, Column, Lead, LeadInput } from "./types";
+import type { Board as BoardData, Call, Column, Lead, LeadInput, SyncResult, SyncWarning } from "./types";
 import { api } from "./lib/api";
-import { digits, isPhoneQuery, matches, phoneKey, todayStr } from "./lib/text";
+import { digits, fmtPhone, isPhoneQuery, matches, phoneKey, todayStr } from "./lib/text";
+import { getMe, isOnline, setMe as storeMe, setOperators } from "./lib/operators";
 import { Board } from "./components/Board";
 import { LeadModal } from "./components/LeadModal";
 import { ColumnModal } from "./components/ColumnModal";
 import { CallsModal } from "./components/CallsModal";
+import { OperatorModal } from "./components/OperatorModal";
+import { OpBadge } from "./components/OpBadge";
 import { SearchCalls, type UnknownNumber } from "./components/SearchCalls";
-import { groupCalls, isTalked, isToday } from "./lib/calls";
+import { fmtCallTime, groupCalls, isTalked, isToday } from "./lib/calls";
 
 type LeadDialog = { lead?: Lead; columnId?: string; prefill?: Partial<LeadInput> };
 type ColumnDialog = { column?: Column };
+type Alert = SyncWarning & { id: number; at: number };
 
 export default function App() {
   const [board, setBoard] = useState<BoardData | null>(null);
@@ -18,6 +22,11 @@ export default function App() {
   const [callsOpen, setCallsOpen] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [q, setQ] = useState("");
+  const [me, setMeState] = useState(getMe);
+  const [opOpen, setOpOpen] = useState(false);
+  /** Doska filtri: "" — hammasi, aks holda operator nomi */
+  const [filterOp, setFilterOp] = useState("");
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [leadDialog, setLeadDialog] = useState<LeadDialog | null>(null);
   const [columnDialog, setColumnDialog] = useState<ColumnDialog | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -25,6 +34,7 @@ export default function App() {
   const toastTimer = useRef<number | undefined>(undefined);
   const searchRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const alertId = useRef(0);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -35,6 +45,7 @@ export default function App() {
   const reload = useCallback(async () => {
     try {
       const [b, c] = await Promise.all([api.board(), api.calls()]);
+      setOperators(b.operators);
       setBoard(b);
       setCalls(c);
       setLoadError("");
@@ -47,18 +58,30 @@ export default function App() {
     reload();
   }, [reload]);
 
-  // Linphone'ga yangi kontakt qo'shilganda server xabar beradi — doskani yangilaymiz
+  const pushAlerts = useCallback((ws: SyncWarning[]) => {
+    if (!ws.length) return;
+    setAlerts((a) => [...ws.map((w) => ({ ...w, id: ++alertId.current, at: Date.now() })), ...a].slice(0, 20));
+  }, []);
+
+  // Agent (o'zimizniki yoki sherikniki) yangi kontakt/qo'ng'iroq yuborsa server xabar beradi — doskani yangilaymiz
   useEffect(() => {
     const es = new EventSource("/api/events");
-    es.addEventListener("linphone", (e) => {
-      const r = JSON.parse((e as MessageEvent).data) as { added: number; names: string[]; calls: number };
-      if (r.added) showToast(r.added === 1 ? `Linphone'dan yangi kontakt: ${r.names[0]}` : `Linphone'dan ${r.added} ta yangi kontakt qo'shildi`);
+    es.addEventListener("sync", (e) => {
+      const r = JSON.parse((e as MessageEvent).data) as SyncResult;
+      if (r.added) showToast(r.added === 1 ? `${r.operator}: yangi uy egasi — ${r.names[0]}` : `${r.operator}: ${r.added} ta yangi uy egasi`);
+      pushAlerts(r.warnings);
       reload();
     });
     // Server qayta ishga tushganda ulanish tiklanadi — orada o'tkazib yuborilgan o'zgarishlarni olamiz
     es.addEventListener("open", () => reload());
     return () => es.close();
-  }, [reload, showToast]);
+  }, [reload, showToast, pushAlerts]);
+
+  // Operatorlarning "ulangan" holati vaqt o'tishi bilan o'zgaradi — minutda bir yangilab turamiz
+  useEffect(() => {
+    const t = window.setInterval(reload, 60_000);
+    return () => window.clearInterval(t);
+  }, [reload]);
 
   // "/" — qidiruvga o'tish
   useEffect(() => {
@@ -97,7 +120,26 @@ export default function App() {
 
   const columns = board?.columns ?? [];
   const leads = board?.leads ?? [];
+  const operators = board?.operators ?? [];
   const callsByKey = useMemo(() => groupCalls(calls), [calls]);
+  const leadById = useMemo(() => new Map(leads.map((l) => [l.id, l])), [leads]);
+
+  // Brauzerda operator tanlanmagan yoki o'chirilgan bo'lsa — tanlashni so'raymiz
+  const needPick = !!board && (!me || !operators.some((o) => o.name === me));
+
+  async function pickMe(name: string) {
+    const ok = await run(async () => {
+      if (!operators.some((o) => o.name === name)) await api.createOperator(name);
+    });
+    if (!ok) return false;
+    storeMe(name);
+    setMeState(name);
+    setOpOpen(false);
+    showToast(`Siz: ${name}`);
+    return true;
+  }
+
+  const shown = useMemo(() => (filterOp ? leads.filter((l) => l.operator === filterOp) : leads), [leads, filterOp]);
 
   // Raqam bilan qidirilganda: doskada kartasi yo'q, lekin qo'ng'iroq bo'lgan raqamlar
   const unknownNumbers = useMemo<UnknownNumber[]>(() => {
@@ -116,15 +158,16 @@ export default function App() {
     const today = todayStr();
     return {
       total: leads.length,
+      mine: leads.filter((l) => l.operator === me).length,
       onRentmi: leads.filter((l) => l.rentmeUrl.trim()).length,
       due: leads.filter((l) => l.nextCall && l.nextCall <= today).length,
-      found: q ? leads.filter((l) => matches(l, q)).length : 0,
+      found: q ? shown.filter((l) => matches(l, q)).length : 0,
       callsToday: calls.filter((c) => isToday(c.startedAt)).length,
       talkedToday: calls.filter((c) => isToday(c.startedAt) && isTalked(c)).length,
       callsAll: calls.length,
       talkedAll: calls.filter(isTalked).length,
     };
-  }, [leads, calls, q]);
+  }, [leads, shown, calls, q, me]);
 
   function moveLead(id: string, columnId: string, beforeId: string | null) {
     const lead = leads.find((l) => l.id === id);
@@ -162,6 +205,8 @@ export default function App() {
     await run(() => api.importCsv(text), (r) => `CSV: ${r.created} ta yangi, ${r.updated} ta yangilandi`);
   }
 
+  const localOp = board?.localOperator ?? null;
+
   return (
     <>
       <div className="top">
@@ -182,6 +227,9 @@ export default function App() {
           )}
         </div>
         <div className="actions">
+          <button className="btn me-btn" type="button" onClick={() => setOpOpen(true)} title="Operatorni o'zgartirish">
+            {me ? <OpBadge name={me} me={me} title="Siz" /> : "Siz kimsiz?"}
+          </button>
           <button className="btn" type="button" onClick={() => setCallsOpen(true)}>
             Qo'ng'iroqlar
           </button>
@@ -193,10 +241,25 @@ export default function App() {
           </button>
           {menuOpen && (
             <div className="menu" onClick={() => setMenuOpen(false)}>
-              <button type="button" onClick={() => run(() => api.importLinphone(), (r) => (r.added || r.calls ? `Linphone: ${r.added} ta yangi kontakt, ${r.calls} ta yangi qo'ng'iroq` : "Linphone'da yangi narsa yo'q"))}>
-                Linphone'dan yangilash
-                <small>Yangi kontaktlar «{columns[0]?.name ?? "Yangi"}» ustuniga qo'shiladi</small>
-              </button>
+              {localOp && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    run(
+                      () => api.syncLocal(),
+                      (r: SyncResult) => {
+                        pushAlerts(r.warnings);
+                        return r.added || r.calls ? `${r.operator}: ${r.added} ta yangi kontakt, ${r.calls} ta yangi qo'ng'iroq` : "Softphone'da yangi narsa yo'q";
+                      },
+                    )
+                  }
+                >
+                  Softphone'dan yangilash
+                  <small>
+                    {localOp}ning kontaktlari «{columns[0]?.name ?? "Yangi"}» ustuniga qo'shiladi
+                  </small>
+                </button>
+              )}
               <a href="/api/export.csv" download>
                 CSV yuklab olish
                 <small>Excel uchun zaxira nusxa</small>
@@ -229,8 +292,22 @@ export default function App() {
         {board ? (
           <>
             {q && <span className="found">{stats.found} ta topildi</span>}
-            <span>
-              Uy egalari <b>{stats.total}</b>
+            <span className="filters" role="group" aria-label="Operator bo'yicha filtr">
+              <button type="button" className={"chip-f" + (filterOp === "" ? " on" : "")} onClick={() => setFilterOp("")}>
+                Hammasi <b>{stats.total}</b>
+              </button>
+              {operators.map((o) => (
+                <button
+                  key={o.name}
+                  type="button"
+                  className={"chip-f" + (filterOp === o.name ? " on" : "")}
+                  onClick={() => setFilterOp(filterOp === o.name ? "" : o.name)}
+                  title={o.lastSyncAt ? `Softphone: oxirgi aloqa ${fmtCallTime(o.lastSyncAt)}` : "Softphone agenti hali ulanmagan"}
+                >
+                  <span className={"online" + (isOnline(o) ? " yes" : "")} />
+                  {o.name === me ? "Meniki" : o.name} <b>{leads.filter((l) => l.operator === o.name).length}</b>
+                </button>
+              ))}
             </span>
             <span>
               Rentmi'ga joylangan <b>{stats.onRentmi}</b>
@@ -259,14 +336,45 @@ export default function App() {
         </div>
       )}
 
-      {board && <SearchCalls items={unknownNumbers} onCreate={(number) => setLeadDialog({ prefill: { phone: number } })} />}
+      {alerts.length > 0 && (
+        <div className="alerts" role="alert">
+          {alerts.map((a) => {
+            const lead = leadById.get(a.lead.id);
+            return (
+              <div key={a.id} className="alert">
+                <span className="alert-ic">⚠</span>
+                <span className="alert-text">
+                  <b>{a.operator}</b> {a.kind === "call" ? "qo'ng'iroq qildi" : "kontakt qo'shdi"}: <span className="phone">{fmtPhone(a.number)}</span> — bu{" "}
+                  <b>{a.lead.operator}</b>ning uy egasi (<i>{a.lead.ownerName || "Ismsiz"}</i>, {a.lead.columnName})
+                  {a.lastCall && (
+                    <>
+                      . Oxirgi qo'ng'iroq: {a.lastCall.operator}, {fmtCallTime(a.lastCall.startedAt)}
+                    </>
+                  )}
+                </span>
+                {lead && (
+                  <button type="button" className="btn" onClick={() => setLeadDialog({ lead })}>
+                    Kartani ochish
+                  </button>
+                )}
+                <button type="button" className="icon-btn" aria-label="Yopish" onClick={() => setAlerts((xs) => xs.filter((x) => x.id !== a.id))}>
+                  ✕
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {board && <SearchCalls items={unknownNumbers} me={me} onCreate={(number) => setLeadDialog({ prefill: { phone: number } })} />}
 
       {board && (
         <Board
           columns={columns}
-          leads={leads}
+          leads={shown}
           callsByKey={callsByKey}
           q={q}
+          me={me}
           onOpenLead={(lead) => setLeadDialog({ lead })}
           onAddIn={(columnId) => setLeadDialog({ columnId })}
           onEditColumn={(column) => setColumnDialog({ column })}
@@ -281,6 +389,8 @@ export default function App() {
           key={leadDialog.lead?.id ?? "new"}
           {...leadDialog}
           columns={columns}
+          operators={operators}
+          me={me}
           leads={leads}
           callsByKey={callsByKey}
           onClose={() => setLeadDialog(null)}
@@ -317,6 +427,7 @@ export default function App() {
         <CallsModal
           calls={calls}
           leads={leads}
+          me={me}
           onClose={() => setCallsOpen(false)}
           onOpenLead={(lead) => {
             setCallsOpen(false);
@@ -328,6 +439,8 @@ export default function App() {
           }}
         />
       )}
+
+      {(needPick || opOpen) && board && <OperatorModal operators={operators} current={me} onPick={pickMe} onClose={needPick ? undefined : () => setOpOpen(false)} />}
 
       {toast && (
         <div className="toast" role="status">

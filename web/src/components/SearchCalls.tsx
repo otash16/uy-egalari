@@ -5,10 +5,10 @@ import { CallLine } from "./CallRow";
 
 export type UnknownNumber = { phoneKey: string; number: string; calls: Call[] };
 
-type Props = { items: UnknownNumber[]; onCreate: (number: string) => void };
+type Props = { items: UnknownNumber[]; me: string; onCreate: (number: string) => void };
 
 /** Qidiruvda: doskada kartasi yo'q, lekin qo'ng'iroq bo'lgan raqamlar. */
-export function SearchCalls({ items, onCreate }: Props) {
+export function SearchCalls({ items, me, onCreate }: Props) {
   const [open, setOpen] = useState<string | null>(null);
   if (!items.length) return null;
 
@@ -25,7 +25,7 @@ export function SearchCalls({ items, onCreate }: Props) {
               <button type="button" className="stat-link" onClick={() => setOpen(open === it.phoneKey ? null : it.phoneKey)} aria-expanded={open === it.phoneKey}>
                 {it.calls.length} ta qo'ng'iroq
               </button>
-              <CallLine call={it.calls[0]} />
+              <CallLine call={it.calls[0]} me={me} />
               <span className="spacer" />
               <button type="button" className="btn" onClick={() => onCreate(it.number)}>
                 + Karta yaratish
@@ -35,7 +35,7 @@ export function SearchCalls({ items, onCreate }: Props) {
               <ul className="call-list compact">
                 {it.calls.map((c) => (
                   <li key={c.id}>
-                    <CallLine call={c} />
+                    <CallLine call={c} me={me} />
                   </li>
                 ))}
               </ul>

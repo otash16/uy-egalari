@@ -1,17 +1,17 @@
 import { Router } from "express";
 import { prisma, topOrder } from "../db.js";
-import { importCalls, importLinphone } from "../linphone.js";
+import { syncLocal } from "../local.js";
 import { csvCell, HttpError, olxTitle, parseCsv, phoneKey } from "../lib/text.js";
+import { ensureOperator } from "../sync.js";
 
 export const importExportRouter = Router();
 
-/** Linphone'dagi yangi kontaktlarni qo'lda import qilish (menyudagi tugma). */
-importExportRouter.post("/import/linphone", async (_req, res) => {
-  const r = await importLinphone();
-  res.json({ ...r, calls: await importCalls() });
+/** Server turgan kompyuterning softphone'ini qo'lda yangilash (menyudagi tugma). */
+importExportRouter.post("/sync/local", async (_req, res) => {
+  res.json(await syncLocal());
 });
 
-const CSV_HEAD = ["Ism", "Telefon", "Uy nomi", "OLX", "Rentmi", "Bosqich", "Natija", "Qayta qo'ng'iroq", "Izoh", "O'zgartirilgan"];
+const CSV_HEAD = ["Ism", "Telefon", "Uy nomi", "OLX", "Rentmi", "Bosqich", "Mas'ul", "Natija", "Qayta qo'ng'iroq", "Izoh", "O'zgartirilgan"];
 const RESULT_LABELS: Record<string, string> = { no_answer: "Javob bermadi", talked: "Gaplashildi", declined: "Rad etdi" };
 const resultFromLabel = (label: string) =>
   Object.entries(RESULT_LABELS).find(([, v]) => v.toLowerCase() === label.trim().toLowerCase())?.[0] ?? "";
@@ -20,7 +20,7 @@ importExportRouter.get("/export.csv", async (_req, res) => {
   const columns = await prisma.column.findMany({ orderBy: { order: "asc" }, include: { leads: { orderBy: { order: "asc" } } } });
   const rows = columns.flatMap((c) =>
     c.leads.map((l) =>
-      [l.ownerName, l.phone, l.houseName, l.olxUrl, l.rentmeUrl, c.name, RESULT_LABELS[l.callResult] ?? "", l.nextCall, l.note, l.updatedAt.toISOString().slice(0, 16).replace("T", " ")]
+      [l.ownerName, l.phone, l.houseName, l.olxUrl, l.rentmeUrl, c.name, l.operator, RESULT_LABELS[l.callResult] ?? "", l.nextCall, l.note, l.updatedAt.toISOString().slice(0, 16).replace("T", " ")]
         .map(csvCell)
         .join(","),
     ),
@@ -46,6 +46,7 @@ importExportRouter.post("/import/csv", async (req, res) => {
     olx: idx("OLX"),
     rm: idx("Rentmi"),
     stage: idx("Bosqich"),
+    operator: idx("Mas'ul"),
     result: idx("Natija"),
     next: idx("Qayta qo'ng'iroq"),
     note: idx("Izoh"),
@@ -81,10 +82,12 @@ importExportRouter.post("/import/csv", async (req, res) => {
       note: get(col.note),
       nextCall: /^\d{4}-\d{2}-\d{2}$/.test(get(col.next)) ? get(col.next) : "",
       ...(col.result >= 0 ? { callResult: resultFromLabel(get(col.result)) } : {}),
+      ...(col.operator >= 0 && get(col.operator) ? { operator: get(col.operator).slice(0, 40) } : {}),
     };
     if (!data.ownerName && !data.phone && !data.olxUrl) continue;
     if (!data.houseName) data.houseName = olxTitle(data.olxUrl);
     const columnId = await columnFor(get(col.stage));
+    if (data.operator) await ensureOperator(data.operator);
     const existing = data.phoneKey ? await prisma.lead.findFirst({ where: { phoneKey: data.phoneKey } }) : null;
     if (existing) {
       await prisma.lead.update({

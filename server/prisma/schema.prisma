@@ -7,6 +7,17 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+/// Operator (call-centerda ishlovchi odam). Har bir karta va qo'ng'iroq operatorga bog'lanadi.
+model Operator {
+  name       String    @id
+  color      Int       @default(0)
+  /// "linphone" | "microsip" | "" — agent qaysi dasturdan o'qiyapti
+  softphone  String    @default("")
+  /// Agentdan oxirgi xabar kelgan vaqt (ulanganini ko'rsatish uchun)
+  lastSyncAt DateTime?
+  createdAt  DateTime  @default(now())
+}
+
 /// Kanban ustuni (bosqich): "Yangi", "Qo'ng'iroq qilindi" va h.k.
 model Column {
   id        String   @id @default(cuid())
@@ -32,10 +43,13 @@ model Lead {
   nextCall   String   @default("")
   /// Qo'lda tanlangan natija: "" | no_answer | talked | declined
   callResult String   @default("")
+  /// Mas'ul operator (Operator.name). Kim birinchi qo'shgan bo'lsa — o'sha. Bo'sh = belgilanmagan.
+  operator   String   @default("")
+  /// Softphone'dagi kontakt id (masalan Linphone friend.id), import orqali kelgan bo'lsa.
+  extId      String   @default("")
   order      Float
   columnId   String
   column     Column   @relation(fields: [columnId], references: [id], onDelete: Restrict)
-  linphoneId Int?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -43,19 +57,25 @@ model Lead {
   @@index([phoneKey])
 }
 
-/// Linphone'dan bir marta olingan kontaktlar — o'chirilgan karta qayta qo'shilmasligi uchun.
-model LinphoneImport {
-  linphoneId Int      @id
+/// Softphone'dan bir marta olingan kontaktlar — o'chirilgan karta qayta qo'shilmasligi uchun.
+model ContactImport {
+  operator   String
+  extId      String
   importedAt DateTime @default(now())
+
+  @@id([operator, extId])
 }
 
-/// Linphone qo'ng'iroqlar tarixidan olingan qo'ng'iroq. Kartaga telefon raqami (phoneKey) orqali bog'lanadi.
+/// Operator softphone'idan olingan qo'ng'iroq. Kartaga telefon raqami (phoneKey) orqali bog'lanadi.
 model Call {
-  /// Linphone'dagi conference_call.id
-  id          Int       @id
+  id          String    @id @default(cuid())
+  /// Kimning softphone'idan (Operator.name)
+  operator    String    @default("")
+  /// Softphone'dagi id (Linphone conference_call.id, MicroSIP call_log.id)
+  extId       String
   /// "out" — chiquvchi, "in" — kiruvchi
   direction   String
-  /// success | aborted | missed | declined | early_aborted | accepted_elsewhere | declined_elsewhere
+  /// success | aborted | missed | declined | early_aborted | accepted_elsewhere | declined_elsewhere | unknown
   status      String
   /// Qarshi tomon raqami (SIP manzilning user qismi)
   number      String
@@ -65,6 +85,7 @@ model Call {
   /// Gaplashilgan vaqt, soniyada
   duration    Int       @default(0)
 
+  @@unique([operator, extId])
   @@index([phoneKey])
   @@index([startedAt])
 }
