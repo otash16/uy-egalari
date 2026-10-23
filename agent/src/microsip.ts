@@ -99,8 +99,8 @@ export function microsipSource(dir = defaultMicrosipDir()): Source {
       check();
       const parts: string[] = [];
       if (fs.existsSync(callsDb)) {
-        const c = withDb(callsDb, (db) => db.prepare("SELECT count(*) AS c, max(id) AS m FROM call_log").get() as { c: number; m: number | null });
-        parts.push(`db:${c.c}:${c.m ?? 0}`);
+        const c = withDb(callsDb, (db) => db.prepare("SELECT count(*) AS c, max(id) AS m, coalesce(sum(duration), 0) AS d FROM call_log").get() as { c: number; m: number | null; d: number });
+        parts.push(`db:${c.c}:${c.m ?? 0}:${c.d}`);
       } else {
         const st = fs.statSync(ini);
         parts.push(`ini:${st.size}:${st.mtimeMs}`);
@@ -113,7 +113,7 @@ export function microsipSource(dir = defaultMicrosipDir()): Source {
       let raw: RawCall[];
       if (fs.existsSync(callsDb)) {
         raw = withDb(callsDb, (db) =>
-          (db.prepare("SELECT id, number, type, time, duration FROM call_log WHERE id > ? ORDER BY id").all(afterCallId) as any[]).map((r) => ({
+          (db.prepare("SELECT id, number, type, time, duration FROM call_log WHERE id > ? OR time >= strftime('%s','now') - 900 ORDER BY id").all(afterCallId) as any[]).map((r) => ({
             id: Number(r.id),
             number: String(r.number ?? ""),
             type: Number(r.type ?? 0),

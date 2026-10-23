@@ -126,12 +126,26 @@ async function doApply(p: SyncPayload): Promise<SyncResult> {
   }
 
   // --- qo'ng'iroqlar (SQLite'da skipDuplicates yo'q — o'zimiz filtrlaymiz)
+  // Softphone qo'ng'iroq boshlanishida "aborted, 0s" deb yozib, tugagach yangilaydi — shuning uchun
+  // mavjud yozuvning status/davomiyligi o'zgargan bo'lsa yangilab qo'yamiz.
   let newCalls = 0;
   if (p.calls.length) {
-    const have = new Set(
-      (await prisma.call.findMany({ where: { operator: p.operator, extId: { in: p.calls.map((c) => c.extId) } }, select: { extId: true } })).map((c) => c.extId),
+    const have = new Map(
+      (
+        await prisma.call.findMany({
+          where: { operator: p.operator, extId: { in: p.calls.map((c) => c.extId) } },
+          select: { id: true, extId: true, status: true, duration: true, connectedAt: true },
+        })
+      ).map((c) => [c.extId, c]),
     );
     const fresh = p.calls.filter((c) => !have.has(c.extId));
+    for (const c of p.calls) {
+      const old = have.get(c.extId);
+      if (!old) continue;
+      const connectedAt = c.connectedAt ? new Date(c.connectedAt) : null;
+      const changed = old.status !== c.status || old.duration !== c.duration || (old.connectedAt?.getTime() ?? null) !== (connectedAt?.getTime() ?? null);
+      if (changed) await prisma.call.update({ where: { id: old.id }, data: { status: c.status, duration: c.duration, connectedAt } });
+    }
     if (fresh.length) {
       await prisma.call.createMany({
         data: fresh.map((c) => ({

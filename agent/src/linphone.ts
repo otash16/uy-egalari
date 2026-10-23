@@ -51,8 +51,14 @@ export function linphoneSource(dbPath = defaultLinphonePath()): Source {
     signature: () =>
       withDb((db) => {
         const f = db.prepare("SELECT count(*) AS c, max(id) AS m FROM friend").get() as { c: number; m: number | null };
-        const c = db.prepare("SELECT count(*) AS c, max(id) AS m FROM conference_call").get() as { c: number; m: number | null };
-        return `${f.c}:${f.m ?? 0}|${c.c}:${c.m ?? 0}`;
+        // Linphone qo'ng'iroq boshlanishida qator yozib, tugagach status/duration'ni yangilaydi —
+        // shuning uchun imzoga yig'indilar ham kiradi, aks holda yangilanish sezilmaydi.
+        const c = db
+          .prepare(
+            "SELECT count(*) AS c, max(id) AS m, coalesce(sum(duration), 0) AS d, coalesce(sum(status), 0) AS s, count(connected_time) AS k FROM conference_call",
+          )
+          .get() as { c: number; m: number | null; d: number; s: number; k: number };
+        return `${f.c}:${f.m ?? 0}|${c.c}:${c.m ?? 0}:${c.d}:${c.s}:${c.k}`;
       }),
     read: (afterCallId) =>
       withDb((db) => {
@@ -69,7 +75,8 @@ export function linphoneSource(dbPath = defaultLinphonePath()): Source {
                FROM conference_call c
                JOIN sip_address f ON f.id = c.from_sip_address_id
                JOIN sip_address t ON t.id = c.to_sip_address_id
-              WHERE c.id > ? ORDER BY c.id`,
+              WHERE c.id > ? OR c.start_time >= datetime('now', '-15 minutes')
+              ORDER BY c.id`,
           )
           .all(afterCallId) as {
           id: number;
@@ -90,7 +97,8 @@ export function linphoneSource(dbPath = defaultLinphonePath()): Source {
           connectedAt: utc(r.connected_time),
           duration: r.duration ?? 0,
         }));
-        return { contacts, calls, maxCallId: rows.length ? rows[rows.length - 1].id : afterCallId };
+        // Yaqindagi (hali tugamagan bo'lishi mumkin) qo'ng'iroqlar keyingi o'qishda ham qayta yuboriladi
+        return { contacts, calls, maxCallId: Math.max(afterCallId, ...rows.map((r) => r.id)) };
       }),
   };
 }
