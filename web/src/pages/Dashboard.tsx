@@ -173,6 +173,16 @@ const Tile = ({ k, v, s, cls }: { k: string; v: string; s: string; cls?: string 
 
 /* ---------- sahifa ---------- */
 type SortKey = "owner" | "stage" | "calls" | "last_call_ms" | "created_ms";
+type Theme = "light" | "dark" | "auto";
+const THEMES: [Theme, string][] = [["light", "Yorug'"], ["dark", "Qorong'i"], ["auto", "Avto"]];
+function readTheme(): Theme {
+  try {
+    const t = localStorage.getItem("dash-theme");
+    return t === "light" || t === "dark" || t === "auto" ? t : "auto";
+  } catch {
+    return "auto";
+  }
+}
 
 export function Dashboard() {
   const [data, setData] = useState<Stats | null>(null);
@@ -181,6 +191,13 @@ export function Dashboard() {
   const [stage, setStage] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("created_ms");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [theme, setTheme] = useState<Theme>(readTheme);
+  function pickTheme(t: Theme) {
+    setTheme(t);
+    try {
+      localStorage.setItem("dash-theme", t);
+    } catch {}
+  }
 
   const load = useCallback(async () => {
     try {
@@ -228,13 +245,20 @@ export function Dashboard() {
   );
 
   return (
-    <div className="dash">
+    <div className="dash" data-theme={theme}>
       <div className="wrap">
         <div className="head">
           <div style={{ display: "grid", gap: 8 }}>
             <div className="dbrand"><i />Rentmi · Call-center <a href="/">← Doskaga</a></div>
             <h1>Uy egalari voronkasi</h1>
             {!S && <p className="lede">{error ? "Ma'lumot yuklanmadi" : "Yuklanmoqda…"}</p>}
+          </div>
+          <div className="theme" role="radiogroup" aria-label="Rejim">
+            {THEMES.map(([t, label]) => (
+              <button key={t} type="button" role="radio" aria-checked={theme === t} className={theme === t ? "on" : ""} onClick={() => pickTheme(t)}>
+                {label}
+              </button>
+            ))}
           </div>
         </div>
         {error && <div className="error">{error}</div>}

@@ -1,7 +1,9 @@
-/* Boshliqlar dashboardi — Rentmi uslubi: kulrang zamin, oq 20px kartalar, bitta ko'k aksent. Rentmi'da qorong'i rejim yo'q — doim oq. */
+/* Boshliqlar dashboardi — Rentmi uslubi: kulrang zamin, oq 20px kartalar, bitta ko'k aksent. Rejim: data-theme=light|dark|auto (auto — tizimga ergashadi). */
 .dash { --d-bg: #f2f2f2; --d-panel: #ffffff; --d-ink: #0f0f0f; --d-muted: #6a6a6a; --d-muted2: #9b9b9b; --d-line: #e6e6e6; --d-grid: #ededed;
   --d-blue: #2f6bff; --d-blue-soft: #eaf0ff; --d-green: #05972e; --d-green-soft: #e2ffea; --d-orange: #fa832e; --d-orange-soft: #ffede0; --d-orange-ink: #c9641a; --d-red: #cf0f0f; --d-gray: #c9c9c9; --d-radius: 20px;
   background: var(--d-bg); color: var(--d-ink); color-scheme: light; min-height: 100%; overflow: auto; font-variant-numeric: tabular-nums; }
+.dash[data-theme="dark"] { --d-bg: #111214; --d-panel: #1b1d21; --d-ink: #f1f1f1; --d-muted: #a2a6ad; --d-muted2: #7c8089; --d-line: #2b2e34; --d-grid: #26292e; --d-blue: #6f8fff; --d-blue-soft: rgba(111,143,255,.16); --d-green: #4fcf6f; --d-green-soft: rgba(79,207,111,.16); --d-orange: #ffa05c; --d-orange-soft: rgba(255,160,92,.16); --d-orange-ink: #ffa05c; --d-red: #ff6b6b; --d-gray: #4a4e56; color-scheme: dark; }
+@media (prefers-color-scheme: dark) { .dash[data-theme="auto"] { --d-bg: #111214; --d-panel: #1b1d21; --d-ink: #f1f1f1; --d-muted: #a2a6ad; --d-muted2: #7c8089; --d-line: #2b2e34; --d-grid: #26292e; --d-blue: #6f8fff; --d-blue-soft: rgba(111,143,255,.16); --d-green: #4fcf6f; --d-green-soft: rgba(79,207,111,.16); --d-orange: #ffa05c; --d-orange-soft: rgba(255,160,92,.16); --d-orange-ink: #ffa05c; --d-red: #ff6b6b; --d-gray: #4a4e56; color-scheme: dark; } }
 .dash .wrap { max-width: 1180px; margin-inline: auto; padding: 24px 16px 48px; display: grid; gap: 20px; }
 .dash h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.56px; line-height: 1.2; margin: 0; text-wrap: balance; }
 .dash h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.32px; margin: 0; }
@@ -13,6 +15,10 @@
 .dash .dbrand a:hover { text-decoration: underline; }
 .dash .lede { color: var(--d-muted); font-size: 16px; letter-spacing: -0.32px; max-width: 62ch; }
 .dash .lede b { color: var(--d-ink); font-weight: 600; }
+.dash .theme { display: inline-flex; background: var(--d-panel); border: 1px solid var(--d-line); border-radius: 999px; padding: 3px; gap: 2px; align-self: flex-end; }
+.dash .theme button { border: 0; background: transparent; color: var(--d-muted); border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 500; }
+.dash .theme button.on { background: var(--d-blue); color: #fff; }
+.dash .theme button:hover:not(.on) { color: var(--d-ink); }
 .dash .error { background: var(--d-orange-soft); color: var(--d-orange-ink); padding: 12px 16px; border-radius: 16px; font-size: 14px; }
 
 .dash .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)); gap: 12px; }
