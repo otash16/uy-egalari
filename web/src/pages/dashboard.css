@@ -1,11 +1,7 @@
-/* Boshliqlar dashboardi — Rentmi uslubi: kulrang zamin, oq 20px kartalar, bitta ko'k aksent */
+/* Boshliqlar dashboardi — Rentmi uslubi: kulrang zamin, oq 20px kartalar, bitta ko'k aksent. Rentmi'da qorong'i rejim yo'q — doim oq. */
 .dash { --d-bg: #f2f2f2; --d-panel: #ffffff; --d-ink: #0f0f0f; --d-muted: #6a6a6a; --d-muted2: #9b9b9b; --d-line: #e6e6e6; --d-grid: #ededed;
   --d-blue: #0b42d7; --d-blue-soft: #ebf0ff; --d-green: #05972e; --d-green-soft: #e2ffea; --d-orange: #fa832e; --d-orange-soft: #ffede0; --d-orange-ink: #c9641a; --d-red: #cf0f0f; --d-gray: #c9c9c9; --d-radius: 20px;
-  background: var(--d-bg); color: var(--d-ink); min-height: 100%; overflow: auto; font-variant-numeric: tabular-nums; }
-@media (prefers-color-scheme: dark) {
-  .dash { --d-bg: #111214; --d-panel: #1b1d21; --d-ink: #f1f1f1; --d-muted: #a2a6ad; --d-muted2: #7c8089; --d-line: #2b2e34; --d-grid: #26292e;
-    --d-blue: #6f8fff; --d-blue-soft: rgba(111,143,255,.16); --d-green: #4fcf6f; --d-green-soft: rgba(79,207,111,.16); --d-orange: #ffa05c; --d-orange-soft: rgba(255,160,92,.16); --d-orange-ink: #ffa05c; --d-red: #ff6b6b; --d-gray: #4a4e56; }
-}
+  background: var(--d-bg); color: var(--d-ink); color-scheme: light; min-height: 100%; overflow: auto; font-variant-numeric: tabular-nums; }
 .dash .wrap { max-width: 1180px; margin-inline: auto; padding: 24px 16px 48px; display: grid; gap: 20px; }
 .dash h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.56px; line-height: 1.2; margin: 0; text-wrap: balance; }
 .dash h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.32px; margin: 0; }
