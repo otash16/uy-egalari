@@ -61,4 +61,6 @@ export type Source = {
   signature(): string;
   /** afterCallId'dan katta id'li qo'ng'iroqlar va barcha kontaktlar */
   read(afterCallId: number): { contacts: SyncContact[]; calls: SyncCall[]; maxCallId: number };
+  /** Ishga tushganda oynaga yoziladigan tashxis: qaysi fayllar topildi, nechta kontakt o'qildi */
+  diagnose?(): string;
 };

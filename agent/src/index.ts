@@ -42,6 +42,8 @@ try {
 
 let lastSig = "";
 let lastSent = 0;
+/** Oxirgi o'qilgan kontaktlar soni (-1 = hali o'qilmagan) */
+let lastContacts = -1;
 let warned = "";
 
 async function send(payload: SyncPayload): Promise<SyncResult> {
@@ -64,6 +66,10 @@ async function tick() {
     if (!changed && Date.now() - lastSent < HEARTBEAT) return;
     const { contacts, calls, maxCallId } = changed ? source.read(afterCallId) : { contacts: [], calls: [], maxCallId: afterCallId };
     const r = await send({ operator: cfg.operator, softphone: cfg.softphone, contacts, calls });
+    if (changed && contacts.length !== lastContacts) {
+      if (lastContacts >= 0) console.log(`${time()}  softphone'da ${contacts.length} ta kontakt, ${calls.length} ta qo'ng'iroq o'qildi — serverga yuborildi`);
+      lastContacts = contacts.length;
+    }
     lastSig = sig;
     lastSent = Date.now();
     if (maxCallId > afterCallId) {
@@ -91,5 +97,6 @@ async function tick() {
 }
 
 console.log(`Uy egalari agenti — operator: ${cfg.operator}, ${source.softphone} (${source.location}) → ${cfg.server}`);
+if (source.diagnose) console.log(source.diagnose());
 tick();
 setInterval(tick, INTERVAL);

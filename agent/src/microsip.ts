@@ -73,6 +73,36 @@ function readXmlContacts(xmlPath: string): SyncContact[] {
   return out;
 }
 
+/**
+ * contacts.db dan kontaktlar. Jadval/ustun nomlari versiyaga qarab farq qilishi mumkin, shuning uchun
+ * "contacts" (bo'lmasa birinchi jadval) ichidan number/phone/mobile ustunini qidiramiz.
+ */
+function readDbContacts(file: string): { contacts: SyncContact[]; note: string } {
+  return withDb(file, (db) => {
+    const tables = (db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all() as { name: string }[]).map((t) => t.name);
+    const table = tables.includes("contacts") ? "contacts" : tables[0];
+    if (!table) return { contacts: [], note: "contacts.db bo'sh (jadval yo'q)" };
+    const cols = (db.prepare(`PRAGMA table_info("${table}")`).all() as { name: string }[]).map((c) => c.name);
+    const pick = (...names: string[]) => names.find((n) => cols.includes(n));
+    const numCol = pick("number", "phone", "mobile", "uri");
+    if (!numCol) return { contacts: [], note: `contacts.db: "${table}" jadvalida raqam ustuni yo'q (ustunlar: ${cols.join(", ")})` };
+    const nameCol = pick("name", "fullname", "display_name");
+    const infoCol = pick("info", "comment", "note");
+    const idCol = pick("id", "rowid");
+    const rows = db.prepare(`SELECT * FROM "${table}" ORDER BY ${idCol ?? "rowid"}`).all() as Record<string, unknown>[];
+    const contacts = rows
+      .map((r) => ({
+        extId: String((idCol && r[idCol]) ?? r[numCol] ?? ""),
+        name: String((nameCol && r[nameCol]) ?? ""),
+        phone: String(r[numCol] ?? ""),
+        // OLX havolasi "info" maydoniga yozilsa kartaga tushadi
+        olxUrl: String((infoCol && r[infoCol]) ?? ""),
+      }))
+      .filter((c) => c.phone && c.extId);
+    return { contacts, note: `contacts.db: "${table}" (${cols.join(", ")}) — ${contacts.length} ta` };
+  });
+}
+
 function withDb<T>(file: string, fn: (db: DatabaseSync) => T): T {
   const db = new DatabaseSync(file, { readOnly: true });
   try {
@@ -124,22 +154,34 @@ export function microsipSource(dir = defaultMicrosipDir()): Source {
       } else raw = readIniCalls(ini, afterCallId);
       const calls = raw.filter((r) => r.time > 0 && r.number).map(toSyncCall);
 
-      let contacts: SyncContact[] = [];
-      if (fs.existsSync(contactsDb)) {
-        contacts = withDb(contactsDb, (db) => {
-          const cols = new Set((db.prepare("PRAGMA table_info(contacts)").all() as { name: string }[]).map((c) => c.name));
-          if (!cols.has("number")) return [];
-          return (db.prepare("SELECT * FROM contacts ORDER BY id").all() as Record<string, unknown>[]).map((r) => ({
-            extId: String(r.id ?? r.number),
-            name: String(r.name ?? ""),
-            phone: String(r.number ?? ""),
-            // OLX havolasi "info" yoki "comment" maydoniga yozilsa kartaga tushadi
-            olxUrl: String(r.info ?? r.comment ?? ""),
-          }));
-        });
-      } else if (fs.existsSync(contactsXml)) contacts = readXmlContacts(contactsXml);
-
-      return { contacts, calls, maxCallId: raw.length ? raw[raw.length - 1].id : afterCallId };
+      return { contacts: readContacts().contacts, calls, maxCallId: raw.length ? raw[raw.length - 1].id : afterCallId };
+    },
+    diagnose() {
+      const files = fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+      const lines = [`MicroSIP papkasi: ${dir}`, `  fayllar: ${files.join(", ") || "(bo'sh)"}`];
+      try {
+        const r = readContacts();
+        lines.push(`  kontaktlar: ${r.note}`);
+        for (const c of r.contacts.slice(0, 5)) lines.push(`    - ${c.name || "(ismsiz)"} ${c.phone}${c.olxUrl ? " " + c.olxUrl : ""}`);
+        if (r.contacts.length > 5) lines.push(`    ... yana ${r.contacts.length - 5} ta`);
+      } catch (e) {
+        lines.push(`  kontaktlarni o'qib bo'lmadi: ${(e as Error).message}`);
+      }
+      return lines.join("\n");
     },
   };
+
+  /** Kontaktlar: avval contacts.db, u bo'sh/yo'q bo'lsa Contacts.xml. note — tashxis uchun. */
+  function readContacts(): { contacts: SyncContact[]; note: string } {
+    let db: { contacts: SyncContact[]; note: string } | null = null;
+    if (fs.existsSync(contactsDb)) {
+      db = readDbContacts(contactsDb);
+      if (db.contacts.length) return db;
+    }
+    if (fs.existsSync(contactsXml)) {
+      const contacts = readXmlContacts(contactsXml);
+      return { contacts, note: `${db ? db.note + "; " : ""}Contacts.xml — ${contacts.length} ta` };
+    }
+    return db ?? { contacts: [], note: "kontakt fayli yo'q (contacts.db ham, Contacts.xml ham topilmadi) — MicroSIP'da kontakt qo'shilmagan" };
+  }
 }
