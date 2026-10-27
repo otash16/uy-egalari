@@ -3,6 +3,7 @@ import { api } from "../lib/api";
 import { accessLabel, sectionsFor, type User } from "../types";
 import { Icon, Logo, type IconName } from "./Icon";
 import { PasswordModal } from "./PasswordModal";
+import { navigate, usePath } from "../lib/router";
 
 const MONTHS = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avgust", "sentyabr", "oktyabr", "noyabr", "dekabr"];
 const WEEKDAYS = ["Yakshanba", "Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba"];
@@ -48,7 +49,7 @@ export function Shell({ children }: { children: ReactNode }) {
 
   const sections = sectionsFor(user);
   const hasSidebar = sections.length >= 2;
-  const path = location.pathname.replace(/\/+$/, "") || "/";
+  const path = usePath();
   const initial = (user?.name.trim()[0] ?? "?").toUpperCase();
 
   function toggleCollapsed() {
@@ -64,8 +65,16 @@ export function Shell({ children }: { children: ReactNode }) {
     window.setTimeout(() => setToast(""), 2800);
   }
 
+  /** Oddiy bosish — ichki o'tish; Cmd/Ctrl yoki o'rta tugma — brauzer o'zi (yangi tab). */
+  function go(e: React.MouseEvent<HTMLAnchorElement>, to: string) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    navigate(to);
+    setDrawer(false);
+  }
+
   const brand = (
-    <a href="/" className="sb-brand" aria-label="Bosh sahifa">
+    <a href="/" className="sb-brand" aria-label="Bosh sahifa" onClick={(e) => go(e, "/")}>
       <Logo />
       <span>Uy egalari</span>
     </a>
@@ -91,7 +100,7 @@ export function Shell({ children }: { children: ReactNode }) {
               <ul>
                 {sections.map((s) => (
                   <li key={s.to}>
-                    <a href={s.to} className={"sb-item" + (path === s.to ? " on" : "")} title={collapsed ? s.label : undefined} aria-current={path === s.to ? "page" : undefined}>
+                    <a href={s.to} className={"sb-item" + (path === s.to ? " on" : "")} title={collapsed ? s.label : undefined} aria-current={path === s.to ? "page" : undefined} onClick={(e) => go(e, s.to)}>
                       <Icon name={ICONS[s.label] ?? "kanban"} />
                       <span>{s.label}</span>
                     </a>
