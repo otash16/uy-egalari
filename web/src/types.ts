@@ -101,6 +101,8 @@ export type Stats = {
       last_call_ms: number | null;
     },
   ];
+  /** Instagram lidlari (Google Sheets formasi); error bo'lsa raqamlar eski yoki nol */
+  instagram: { total: number; with_phone: number; unique_phones: number; last_at: string | null; fetched_at: string; error?: string };
   funnel: { stage: string; step: number; n: number }[];
   leads_by_day: { day: string; n: number }[];
   calls_by_day: { day: string; n: number; ok: number; outgoing: number; talk_seconds: number }[];

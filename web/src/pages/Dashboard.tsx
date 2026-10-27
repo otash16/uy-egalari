@@ -251,7 +251,22 @@ export function Dashboard() {
             <section className="tiles" aria-label="Qo'ng'iroqlar">
               <Tile k="Jami qo'ng'iroqlar" v={fmtN(S.calls_total)} s={`ta qo'ng'iroq, ${fmtN(S.leads_called)} uy egasiga`} />
               <Tile k="Javob berishmadi" v={fmtN(S.leads - S.leads_talked)} s={`${pct((S.leads - S.leads_talked) / S.leads)} uy egalaridan, hech qachon javob bermagan`} />
-              <Tile k="Instagram lidlari" v="Manba ulanmagan" s="Lidlar bazasi ulangach: kelgan, qo'ng'iroq qilingan, ro'yxatdan o'tgan" cls="soon" />
+              {(() => {
+                const ig = data.instagram;
+                const dead = !!ig.error && !ig.total;
+                return (
+                  <Tile
+                    k="Instagram lidlari"
+                    v={dead ? "Ulanmadi" : fmtN(ig.with_phone)}
+                    s={
+                      dead
+                        ? `Google jadvalini o'qib bo'lmadi: ${ig.error}`
+                        : `telefon raqamini qoldirgan ijarachi · ${fmtN(ig.total)} ta ariza, ${fmtN(ig.unique_phones)} ta noyob raqam · oxirgisi ${ig.last_at?.split(" ")[0] ?? "—"}${ig.error ? " · yangilanmadi" : ""}`
+                    }
+                    cls={dead ? "soon" : undefined}
+                  />
+                );
+              })()}
             </section>
 
             <section className="grid">
@@ -360,7 +375,7 @@ export function Dashboard() {
               </div>
             </section>
 
-            <footer>Ma'lumot har daqiqada doska bazasidan yangilanadi. Instagram lidlari manbasi ulangach shu sahifaga qo'shiladi.</footer>
+            <footer>Ma'lumot har daqiqada doska bazasidan yangilanadi. Instagram lidlari Google Forms jadvalidan har 5 daqiqada o'qiladi.</footer>
           </>
         )}
       </div>

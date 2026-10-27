@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { prisma } from "../db.js";
+import { instagramStats } from "../instagram.js";
 
 /**
  * Boshliqlar dashboardi uchun jonli statistika (GET /api/stats).
@@ -16,11 +17,12 @@ const hourOf = (d: Date) => Number(hourFmt.format(d)) % 24;
 const isTalk = (c: { status: string; duration: number }) => c.status === "success" && c.duration > 0;
 
 statsRouter.get("/stats", async (_req, res) => {
-  const [columns, leads, calls, operators] = await Promise.all([
+  const [columns, leads, calls, operators, instagram] = await Promise.all([
     prisma.column.findMany({ orderBy: { order: "asc" } }),
     prisma.lead.findMany({ orderBy: { createdAt: "desc" } }),
     prisma.call.findMany({ orderBy: { startedAt: "asc" } }),
     prisma.operator.findMany({ orderBy: { createdAt: "asc" } }),
+    instagramStats(),
   ]);
 
   // Raqam bo'yicha qo'ng'iroqlar — kartaga bog'lash uchun
@@ -131,5 +133,5 @@ statsRouter.get("/stats", async (_req, res) => {
     };
   });
 
-  res.json({ generated_at: new Date().toISOString(), summary: [summary], funnel, leads_by_day, calls_by_day, calls_by_status, calls_by_hour, by_operator, leads: leadRows });
+  res.json({ generated_at: new Date().toISOString(), summary: [summary], instagram, funnel, leads_by_day, calls_by_day, calls_by_status, calls_by_hour, by_operator, leads: leadRows });
 });
