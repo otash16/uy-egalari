@@ -272,8 +272,8 @@ export function Dashboard() {
               <Tile k="Rentmi'ga joylangan" v={fmtN(S.rentmi_placed)} s={`${pct(S.rentmi_placed / S.leads)} uy egalaridan`} />
             </section>
             <section className="tiles" aria-label="Qo'ng'iroqlar">
-              <Tile k="Jami qo'ng'iroqlar" v={fmtN(S.calls_total)} s={`${fmtN(S.calls_out)} tasi chiquvchi`} />
-              <Tile k="Javob berilgan" v={fmtN(S.calls_success)} s={`${pct(S.calls_success / S.calls_total)} qo'ng'iroqlardan`} />
+              <Tile k="Jami qo'ng'iroqlar" v={fmtN(S.calls_total)} s={`ta qo'ng'iroq, ${fmtN(S.leads_called)} uy egasiga`} />
+              <Tile k="Javob berishmadi" v={fmtN(S.leads - S.leads_talked)} s={`${pct((S.leads - S.leads_talked) / S.leads)} uy egalaridan, hech qachon javob bermagan`} />
               <Tile k="Instagram lidlari" v="Manba ulanmagan" s="Lidlar bazasi ulangach: kelgan, qo'ng'iroq qilingan, ro'yxatdan o'tgan" cls="soon" />
             </section>
 
