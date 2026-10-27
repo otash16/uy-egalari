@@ -121,16 +121,17 @@ export type Stats = {
   }[];
 };
 
-/** Foydalanuvchi roli: dasturchi | PM | operator */
-export type Role = "dev" | "pm" | "operator";
-export const ROLE_LABEL: Record<Role, string> = { dev: "Dasturchi", pm: "PM", operator: "Operator" };
-
 /** GET /api/me va /api/users — parolsiz foydalanuvchi. */
 export type User = {
   id: string;
   login: string;
   name: string;
-  role: Role;
+  /** Dasturchi: hammasi + foydalanuvchilar */
+  isAdmin: boolean;
+  /** Kanban doskasiga kirish */
+  canBoard: boolean;
+  /** Boshliqlar dashboardiga kirish */
+  canDashboard: boolean;
   /** Bog'langan Operator.name, "" = yo'q */
   operator: string;
   active: boolean;
@@ -138,11 +139,25 @@ export type User = {
   createdAt: string;
 };
 
-/** Rolga qarab UI ruxsatlari (server ham tekshiradi). */
+/** Bayroqlardan UI ruxsatlari (server ham tekshiradi). */
 export const can = (u: User | null) => ({
-  manage: u?.role === "dev" || u?.role === "pm", // ustunlar, import/export, operatorlar
-  dashboard: u?.role === "dev" || u?.role === "pm",
-  users: u?.role === "dev",
-  /** Mas'ul operatorni istalgan odamga qo'yish */
-  anyOperator: u?.role === "dev" || u?.role === "pm",
+  board: !!u && (u.isAdmin || u.canBoard),
+  dashboard: !!u && (u.isAdmin || u.canDashboard),
+  users: !!u?.isAdmin,
+  /** Ustunlar, import/export, operatorlar, mas'ulni istalgan odamga qo'yish */
+  manage: !!u?.isAdmin,
 });
+
+/** Sidebar bandlari — ruxsati bor bo'limlar. 2 tadan kam bo'lsa sidebar ko'rsatilmaydi. */
+export const sectionsFor = (u: User | null) => {
+  const c = can(u);
+  return [
+    ...(c.board ? [{ to: "/", label: "Kanban" }] : []),
+    ...(c.dashboard ? [{ to: "/dashboard", label: "Dashboard" }] : []),
+    ...(c.users ? [{ to: "/users", label: "Foydalanuvchilar" }] : []),
+  ];
+};
+
+/** Foydalanuvchi ruxsatlarini qisqa matn bilan: "Dasturchi" yoki "Kanban, Dashboard". */
+export const accessLabel = (u: User) =>
+  u.isAdmin ? "Dasturchi" : [u.canBoard && "Kanban", u.canDashboard && "Dashboard"].filter(Boolean).join(", ") || "Ruxsat yo'q";

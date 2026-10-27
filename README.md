@@ -44,10 +44,11 @@ Batafsil: [docs/SHERIK-WINDOWS.md](docs/SHERIK-WINDOWS.md).
 
 ## Qanday ishlaydi
 
-- Har kim o'z **login va paroli** bilan kiradi. Rollar: **Dasturchi** (hammasi + `/users` sahifasida foydalanuvchilarni boshqarish),
-  **PM** (doska, ustunlar, import/export, dashboard), **Operator** (doska; mas'ulni faqat o'ziga qo'yadi, faqat o'z kartasini o'chiradi, dashboard yo'q).
+- Har kim o'z **login va paroli** bilan kiradi. Ruxsatlar foydalanuvchiga bayroq bilan beriladi (`/users`, faqat dasturchi):
+  **Dasturchi** (hammasi + foydalanuvchilar), **Kanban** (doska: karta qo'shish/tahrirlash/surish; mas'ulni faqat o'ziga qo'yadi,
+  faqat o'z kartasini o'chiradi), **Dashboard** (boshliqlar statistikasi). Login'dan keyin kanbanga, bo'lmasa dashboardga tushadi.
+  2 va undan ko'p bo'limga ruxsati borga chapda sidebar chiqadi (Kanban / Dashboard / Foydalanuvchilar).
   Foydalanuvchiga **operator** bog'lansa (masalan Otajon, Akbar) u qo'shgan kartalar va qo'ng'iroqlar shu nomga yoziladi.
-  Yuqori o'ngdagi ism tugmasi: parolni o'zgartirish, foydalanuvchilar, chiqish.
 - Softphone'ga yangi kontakt qo'shilsa 4 soniya ichida doskaning birinchi ustuniga karta tushadi,
   mas'ul — o'sha kontaktni qo'shgan operator. Linphone'da OLX havolasi "Kompaniya" maydoniga,
   MicroSIP'da "Info" maydoniga yozilsa, kartada havola va uy nomi o'zi to'ladi.

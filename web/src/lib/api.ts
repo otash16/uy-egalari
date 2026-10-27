@@ -1,4 +1,4 @@
-import type { Board, Call, Column, Lead, LeadInput, Operator, Role, Stats, SyncResult, User } from "../types";
+import type { Board, Call, Column, Lead, LeadInput, Operator, Stats, SyncResult, User } from "../types";
 
 async function request<T>(method: string, url: string, body?: unknown, contentType = "application/json"): Promise<T> {
   let res: Response;
@@ -21,7 +21,7 @@ async function request<T>(method: string, url: string, body?: unknown, contentTy
   return data as T;
 }
 
-export type UserInput = { login: string; name: string; role: Role; operator: string; password: string };
+export type UserInput = { login: string; name: string; isAdmin: boolean; canBoard: boolean; canDashboard: boolean; operator: string; password: string };
 
 export const api = {
   me: () => request<User>("GET", "/api/me"),

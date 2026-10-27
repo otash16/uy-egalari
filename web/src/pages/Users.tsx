@@ -1,14 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { api, type UserInput } from "../lib/api";
-import { can, ROLE_LABEL, type Operator, type Role, type User } from "../types";
+import { can, type Operator, type User } from "../types";
 import { Modal } from "../components/Modal";
 
-const ROLES: Role[] = ["dev", "pm", "operator"];
-const ROLE_HINT: Record<Role, string> = {
-  dev: "Hammasi + foydalanuvchilarni boshqarish",
-  pm: "Doska, ustunlar, import/export, dashboard",
-  operator: "Doska: faqat o'z kartalari ustida to'liq huquq, dashboard yo'q",
-};
 const fmtDate = (s: string) => new Date(s).toLocaleDateString("ru-RU");
 
 /** /users — login, parol, rol va operator bog'lash. Faqat dasturchi. */
@@ -94,7 +88,7 @@ export function UsersPage() {
             <tr>
               <th>Ism</th>
               <th>Login</th>
-              <th>Rol</th>
+              <th>Ruxsatlar</th>
               <th>Operator</th>
               <th>Holat</th>
               <th>Qo'shilgan</th>
@@ -109,8 +103,16 @@ export function UsersPage() {
                   {u.id === me?.id && <small> (siz)</small>}
                 </td>
                 <td className="mono">{u.login}</td>
-                <td>
-                  <span className={"role-chip " + u.role}>{ROLE_LABEL[u.role]}</span>
+                <td className="access">
+                  {u.isAdmin ? (
+                    <span className="role-chip dev">Dasturchi</span>
+                  ) : (
+                    <>
+                      {u.canBoard && <span className="role-chip operator">Kanban</span>}
+                      {u.canDashboard && <span className="role-chip pm">Dashboard</span>}
+                      {!u.canBoard && !u.canDashboard && <span className="muted">ruxsat yo'q</span>}
+                    </>
+                  )}
                 </td>
                 <td>{u.operator || <span className="muted">—</span>}</td>
                 <td>{u.active ? "Faol" : "O'chirilgan"}</td>
@@ -135,11 +137,15 @@ export function UsersPage() {
           </tbody>
         </table>
         <div className="roles-help">
-          {ROLES.map((r) => (
-            <div key={r}>
-              <span className={"role-chip " + r}>{ROLE_LABEL[r]}</span> <span className="muted">{ROLE_HINT[r]}</span>
-            </div>
-          ))}
+          <div>
+            <span className="role-chip dev">Dasturchi</span> <span className="muted">Hammasi: kanban, dashboard, ustunlar, import/export va foydalanuvchilar</span>
+          </div>
+          <div>
+            <span className="role-chip operator">Kanban</span> <span className="muted">Doska: karta qo'shish, tahrirlash, surish. Mas'ulni faqat o'ziga qo'yadi, faqat o'z kartasini o'chiradi</span>
+          </div>
+          <div>
+            <span className="role-chip pm">Dashboard</span> <span className="muted">Boshliqlar uchun voronka va statistika</span>
+          </div>
         </div>
       </div>
 
@@ -212,7 +218,9 @@ function UserModal({ user, operators, isSelf, onClose, onSave, onDelete }: Modal
   const [form, setForm] = useState({
     login: user?.login ?? "",
     name: user?.name ?? "",
-    role: (user?.role ?? "operator") as Role,
+    isAdmin: user?.isAdmin ?? false,
+    canBoard: user?.canBoard ?? true,
+    canDashboard: user?.canDashboard ?? false,
     operator: user?.operator ?? "",
     password: "",
   });
@@ -224,7 +232,14 @@ function UserModal({ user, operators, isSelf, onClose, onSave, onDelete }: Modal
   async function submit(e: FormEvent) {
     e.preventDefault();
     setSaving(true);
-    const data: Partial<UserInput> = { login: form.login.trim(), name: form.name.trim(), role: form.role, operator: form.operator.trim() };
+    const data: Partial<UserInput> = {
+      login: form.login.trim(),
+      name: form.name.trim(),
+      isAdmin: form.isAdmin,
+      canBoard: form.canBoard,
+      canDashboard: form.canDashboard,
+      operator: form.operator.trim(),
+    };
     if (form.password) data.password = form.password;
     await onSave(data, user?.id);
     setSaving(false);
@@ -243,17 +258,33 @@ function UserModal({ user, operators, isSelf, onClose, onSave, onDelete }: Modal
             <input id="u_login" value={form.login} onChange={(e) => set("login", e.target.value.toLowerCase())} placeholder="akbar" autoCapitalize="none" spellCheck={false} required pattern="[a-z0-9._-]{2,32}" title="2–32 belgi: lotin harf, raqam, nuqta, chiziqcha" />
           </div>
         </div>
-        <div className="row2">
-          <div className="field">
-            <label htmlFor="u_role">Rol</label>
-            <select id="u_role" value={form.role} onChange={(e) => set("role", e.target.value as Role)} disabled={isSelf}>
-              {ROLES.map((r) => (
-                <option key={r} value={r}>
-                  {ROLE_LABEL[r]}
-                </option>
-              ))}
-            </select>
+        <div className="field">
+          <span className="label">Ruxsatlar</span>
+          <div className="checks">
+            <label className="check">
+              <input type="checkbox" checked={form.isAdmin} onChange={(e) => set("isAdmin", e.target.checked)} disabled={isSelf} />
+              <span>
+                <b>Dasturchi</b>
+                <small>hammasi + foydalanuvchilar</small>
+              </span>
+            </label>
+            <label className={"check" + (form.isAdmin ? " dim" : "")}>
+              <input type="checkbox" checked={form.isAdmin || form.canBoard} onChange={(e) => set("canBoard", e.target.checked)} disabled={form.isAdmin} />
+              <span>
+                <b>Kanban</b>
+                <small>doska bilan ishlash</small>
+              </span>
+            </label>
+            <label className={"check" + (form.isAdmin ? " dim" : "")}>
+              <input type="checkbox" checked={form.isAdmin || form.canDashboard} onChange={(e) => set("canDashboard", e.target.checked)} disabled={form.isAdmin} />
+              <span>
+                <b>Dashboard</b>
+                <small>boshliqlar statistikasi</small>
+              </span>
+            </label>
           </div>
+        </div>
+        <div className="row2">
           <div className="field">
             <label htmlFor="u_op">Operator (softphone)</label>
             {newOp ? (
@@ -280,12 +311,12 @@ function UserModal({ user, operators, isSelf, onClose, onSave, onDelete }: Modal
               </select>
             )}
           </div>
+          <div className="field">
+            <label htmlFor="u_pw">{user ? "Yangi parol (bo'sh qoldirsangiz o'zgarmaydi)" : "Parol"}</label>
+            <input id="u_pw" type="text" value={form.password} onChange={(e) => set("password", e.target.value)} autoComplete="new-password" minLength={6} required={!user} placeholder="kamida 6 ta belgi" className="mono" />
+          </div>
         </div>
-        <p className="hint">{ROLE_HINT[form.role]}. Operator bog'lansa uning kartalari va qo'ng'iroqlari shu nom bilan yoziladi.</p>
-        <div className="field">
-          <label htmlFor="u_pw">{user ? "Yangi parol (bo'sh qoldirsangiz o'zgarmaydi)" : "Parol"}</label>
-          <input id="u_pw" type="text" value={form.password} onChange={(e) => set("password", e.target.value)} autoComplete="new-password" minLength={6} required={!user} placeholder="kamida 6 ta belgi" className="mono" />
-        </div>
+        <p className="hint">Operator bog'lansa uning kartalari va qo'ng'iroqlari shu nom bilan yoziladi; bog'lanmasa (masalan PM) faqat ko'radi.</p>
         <div className="foot">
           {user && !isSelf && (
             <button

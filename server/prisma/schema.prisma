@@ -98,8 +98,12 @@ model User {
   name         String
   /// scrypt$salt$hash
   passwordHash String
-  /// "dev" (dasturchi) | "pm" | "operator"
-  role         String    @default("operator")
+  /// Dasturchi: hammasi + foydalanuvchilarni boshqarish
+  isAdmin      Boolean   @default(false)
+  /// Kanban doskasiga kirish
+  canBoard     Boolean   @default(true)
+  /// Boshliqlar dashboardiga kirish
+  canDashboard Boolean   @default(false)
   /// Bog'langan Operator.name — kartalar va qo'ng'iroqlar shu nomga yoziladi. Bo'sh = yo'q (masalan PM).
   operator     String    @default("")
   /// Softphone agenti uchun Bearer token (faqat operator bog'langan bo'lsa ishlaydi)

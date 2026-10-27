@@ -204,6 +204,8 @@ export function Dashboard() {
       setData(await api.stats());
       setError("");
     } catch (e) {
+      // Dashboardga ruxsati yo'q — kanbanga (bo'lmasa login o'zi so'raydi)
+      if (/ruxsat yo'q/i.test((e as Error).message)) return location.replace("/");
       setError((e as Error).message);
     }
   }, []);
@@ -249,7 +251,7 @@ export function Dashboard() {
       <div className="wrap">
         <div className="head">
           <div style={{ display: "grid", gap: 8 }}>
-            <div className="dbrand"><i />Rentmi · Call-center <a href="/">← Doskaga</a> <a href="/logout">Chiqish</a></div>
+            <div className="dbrand"><i />Rentmi · Call-center <a href="/logout">Chiqish</a></div>
             <h1>Uy egalari voronkasi</h1>
             {!S && <p className="lede">{error ? "Ma'lumot yuklanmadi" : "Yuklanmoqda…"}</p>}
           </div>

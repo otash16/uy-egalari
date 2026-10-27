@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { can, ROLE_LABEL, type Board as BoardData, type Call, type Column, type Lead, type LeadInput, type SyncResult, type SyncWarning, type User } from "./types";
+import { accessLabel, can, type Board as BoardData, type Call, type Column, type Lead, type LeadInput, type SyncResult, type SyncWarning, type User } from "./types";
 import { api } from "./lib/api";
 import { digits, fmtPhone, isPhoneQuery, matches, phoneKey, todayStr } from "./lib/text";
 import { isOnline, setOperators } from "./lib/operators";
@@ -59,7 +59,14 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    api.me().then(setUser).catch((e) => setLoadError((e as Error).message));
+    api
+      .me()
+      .then((u) => {
+        // Kanbanga ruxsati yo'q (masalan faqat dashboard) — o'z sahifasiga
+        if (!can(u).board) return location.replace(can(u).dashboard ? "/dashboard" : "/login");
+        setUser(u);
+      })
+      .catch((e) => setLoadError((e as Error).message));
     reload();
   }, [reload]);
 
@@ -217,11 +224,6 @@ export default function App() {
           )}
         </div>
         <div className="actions">
-          {perms.dashboard && (
-            <a className="btn" href="/dashboard" title="Boshliqlar uchun voronka va statistika">
-              Dashboard
-            </a>
-          )}
           <button className="btn" type="button" onClick={() => setCallsOpen(true)}>
             Qo'ng'iroqlar
           </button>
@@ -233,11 +235,11 @@ export default function App() {
           <button className="btn primary" type="button" onClick={newLeadFromSearch}>
             + Uy egasi
           </button>
-          <button className="btn me-btn" type="button" onClick={() => setMenu((m) => (m === "user" ? "" : "user"))} aria-expanded={menu === "user"} title={user ? `${user.login} · ${ROLE_LABEL[user.role]}` : ""}>
+          <button className="btn me-btn" type="button" onClick={() => setMenu((m) => (m === "user" ? "" : "user"))} aria-expanded={menu === "user"} title={user ? `${user.login} · ${accessLabel(user)}` : ""}>
             {user ? (
               <>
                 {me ? <OpBadge name={me} me={me} title="Siz" /> : <b>{user.name}</b>}
-                <small className="role">{ROLE_LABEL[user.role]}</small>
+                <small className="role">{accessLabel(user)}</small>
               </>
             ) : (
               "…"
@@ -283,19 +285,13 @@ export default function App() {
               <div className="menu-head">
                 <b>{user.name}</b>
                 <small>
-                  {user.login} · {ROLE_LABEL[user.role]}
+                  {user.login} · {accessLabel(user)}
                   {me ? ` · operator: ${me}` : ""}
                 </small>
               </div>
               <button type="button" onClick={() => setPwOpen(true)}>
                 Parolni o'zgartirish
               </button>
-              {perms.users && (
-                <a href="/users">
-                  Foydalanuvchilar
-                  <small>Login, parol va rollar</small>
-                </a>
-              )}
               <a href="/logout">Chiqish</a>
             </div>
           )}
@@ -417,7 +413,7 @@ export default function App() {
           columns={columns}
           operators={operators}
           me={me}
-          anyOperator={perms.anyOperator}
+          anyOperator={perms.manage}
           canDelete={(l) => perms.manage || !l.operator || l.operator === me}
           leads={leads}
           callsByKey={callsByKey}

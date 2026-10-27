@@ -5,13 +5,16 @@ import { prisma } from "./db.js";
 import { HttpError } from "./lib/text.js";
 
 /**
- * Har bir foydalanuvchi o'z login/paroli bilan kiradi (User jadvali), rollar: dev | pm | operator.
+ * Har bir foydalanuvchi o'z login/paroli bilan kiradi (User jadvali). Ruxsatlar — bayroqlar:
+ *   isAdmin (dasturchi: hammasi + foydalanuvchilar), canBoard (kanban), canDashboard (boshliqlar dashboardi).
  * Brauzer — /login sahifasidan sessiya cookie'si (uy_sid) oladi.
  * Agentlar — "Authorization: Bearer <agentToken>" (User.agentToken, faqat operator bog'langan foydalanuvchi).
  */
-export const ROLES = ["dev", "pm", "operator"] as const;
-export type Role = (typeof ROLES)[number];
-export const ROLE_LABEL: Record<Role, string> = { dev: "Dasturchi", pm: "PM", operator: "Operator" };
+export type Section = "board" | "dashboard";
+const SECTION_LABEL: Record<Section, string> = { board: "Kanban", dashboard: "Dashboard" };
+export const hasAccess = (u: User, s: Section) => u.isAdmin || (s === "board" ? u.canBoard : u.canDashboard);
+/** Login'dan keyin qaysi sahifa: kanban, bo'lmasa dashboard, hech biri bo'lmasa null. */
+export const homeFor = (u: User) => (hasAccess(u, "board") ? "/" : hasAccess(u, "dashboard") ? "/dashboard" : null);
 
 const COOKIE = "uy_sid";
 const SESSION_DAYS = 180;
@@ -89,16 +92,25 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
   res.redirect("/login?next=" + encodeURIComponent(req.originalUrl));
 }
 
-/** Faqat ko'rsatilgan rollar o'ta oladi. */
-export const requireRole = (...roles: Role[]) => (req: Request, _res: Response, next: NextFunction) => {
+/** Faqat dasturchi. */
+export const requireAdmin = (req: Request, _res: Response, next: NextFunction) => {
   if (!req.user) throw new HttpError(401, "Kirish kerak");
-  if (!roles.includes(req.user.role as Role)) throw new HttpError(403, "Bu amal uchun ruxsat yo'q (" + roles.map((r) => ROLE_LABEL[r]).join(", ") + ")");
+  if (!req.user.isAdmin) throw new HttpError(403, "Bu amal faqat dasturchi uchun");
+  next();
+};
+/** Bo'limga (kanban / dashboard) ruxsati borlar. */
+export const requireAccess = (s: Section) => (req: Request, _res: Response, next: NextFunction) => {
+  if (!req.user) throw new HttpError(401, "Kirish kerak");
+  if (!hasAccess(req.user, s)) throw new HttpError(403, `${SECTION_LABEL[s]} bo'limiga ruxsat yo'q`);
   next();
 };
 
 /** Mijozga yuboriladigan foydalanuvchi (parolsiz). */
 export function publicUser(u: User) {
-  return { id: u.id, login: u.login, name: u.name, role: u.role as Role, operator: u.operator, active: u.active, hasToken: !!u.agentToken, createdAt: u.createdAt };
+  return {
+    id: u.id, login: u.login, name: u.name, isAdmin: u.isAdmin, canBoard: u.canBoard, canDashboard: u.canDashboard,
+    operator: u.operator, active: u.active, hasToken: !!u.agentToken, createdAt: u.createdAt,
+  };
 }
 
 // ---------- birinchi foydalanuvchi ----------
@@ -119,7 +131,7 @@ export async function ensureInitialUser() {
   const ops = await prisma.operator.findMany({ orderBy: { createdAt: "asc" } });
   const op = ops.find((o) => o.name.toLowerCase() === login) ?? ops.find((o) => o.softphone === "linphone") ?? ops[0];
   await prisma.user.create({
-    data: { login, name: op?.name ?? "Otajon", passwordHash: hashPassword(password), role: "dev", operator: op?.name ?? "", agentToken: newToken() },
+    data: { login, name: op?.name ?? "Otajon", passwordHash: hashPassword(password), isAdmin: true, canBoard: true, canDashboard: true, operator: op?.name ?? "", agentToken: newToken() },
   });
   console.log(`Birinchi foydalanuvchi yaratildi: ${login} (dasturchi)` + (generated ? ` — parol: ${password}` : ""));
 }
@@ -147,9 +159,11 @@ loginRouter.post("/login", async (req, res) => {
   const password = String(req.body?.password ?? "");
   const u = login ? await prisma.user.findUnique({ where: { login } }) : null;
   if (!u || !u.active || !verifyPassword(password, u.passwordHash)) return res.status(401).type("html").send(page("Login yoki parol noto'g'ri", login));
+  const home = homeFor(u);
+  if (!home) return res.status(403).type("html").send(page("Sizga hech qanday bo'lim ochilmagan — dasturchiga murojaat qiling", login));
   await createSession(res, req, u.id);
-  const next = String(req.body?.next ?? "/");
-  res.redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/");
+  const next = String(req.body?.next ?? "");
+  res.redirect(next.startsWith("/") && !next.startsWith("//") && next !== "/" ? next : home);
 });
 loginRouter.get("/logout", async (req, res) => {
   const sid = cookies(req)[COOKIE];

@@ -13,7 +13,7 @@ import { operatorsRouter } from "./routes/operators.js";
 import { statsRouter } from "./routes/stats.js";
 import { applySync } from "./sync.js";
 import { localOperator, watchLocal } from "./local.js";
-import { authMiddleware, ensureInitialUser, loginRouter, meRouter, requireRole } from "./auth.js";
+import { authMiddleware, ensureInitialUser, loginRouter, meRouter, requireAccess, requireAdmin } from "./auth.js";
 import { usersRouter } from "./routes/users.js";
 
 const PORT = Number(process.env.PORT ?? 4100);
@@ -29,6 +29,7 @@ app.set("trust proxy", "loopback");
 app.use(loginRouter);
 app.use(authMiddleware);
 
+app.use(["/api/board", "/api/calls", "/api/events", "/api/leads"], requireAccess("board"));
 app.get("/api/board", async (_req, res) => {
   const [columns, leads, operators] = await Promise.all([
     prisma.column.findMany({ orderBy: { order: "asc" } }),
@@ -50,15 +51,13 @@ app.post("/api/sync", async (req, res) => {
   res.json(r);
 });
 app.use("/api", meRouter);
-app.use("/api/users", requireRole("dev"), usersRouter);
+app.use("/api/users", requireAdmin, usersRouter);
 app.use("/api/operators", operatorsRouter);
-app.use("/api/columns", requireRole("dev", "pm"), columnsRouter);
+app.use("/api/columns", requireAdmin, columnsRouter);
 app.use("/api/leads", leadsRouter);
-app.use("/api/sync/local", requireRole("dev", "pm"));
-app.use("/api/export.csv", requireRole("dev", "pm"));
-app.use("/api/import/csv", requireRole("dev", "pm"));
+app.use(["/api/sync/local", "/api/export.csv", "/api/import/csv"], requireAdmin);
 app.use("/api", importExportRouter);
-app.use("/api/stats", requireRole("dev", "pm"));
+app.use("/api/stats", requireAccess("dashboard"));
 app.use("/api", statsRouter);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Bunday API yo'q" }));
 

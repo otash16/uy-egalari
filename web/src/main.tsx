@@ -9,6 +9,7 @@ import "./index.css";
 import App from "./App";
 import { Dashboard } from "./pages/Dashboard";
 import { UsersPage } from "./pages/Users";
+import { Shell } from "./components/Shell";
 
 // Oddiy marshrut: /dashboard — boshliqlar sahifasi, /users — foydalanuvchilar (dasturchi), qolgani — doska
 const path = location.pathname.replace(/\/+$/, "");
@@ -16,6 +17,6 @@ const page = path === "/dashboard" ? <Dashboard /> : path === "/users" ? <UsersP
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    {page}
+    <Shell>{page}</Shell>
   </StrictMode>,
 );
