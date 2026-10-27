@@ -13,7 +13,8 @@ import { operatorsRouter } from "./routes/operators.js";
 import { statsRouter } from "./routes/stats.js";
 import { applySync } from "./sync.js";
 import { localOperator, watchLocal } from "./local.js";
-import { authMiddleware, loginRouter } from "./auth.js";
+import { authMiddleware, ensureInitialUser, loginRouter, meRouter, requireRole } from "./auth.js";
+import { usersRouter } from "./routes/users.js";
 
 const PORT = Number(process.env.PORT ?? 4100);
 // Ofis tarmog'idagi sherik ham ochishi uchun hamma interfeyslarda eshitadi. Faqat o'zim uchun: HOST=127.0.0.1
@@ -40,16 +41,24 @@ app.get("/api/calls", async (_req, res) => {
   res.json(await prisma.call.findMany({ orderBy: { startedAt: "desc" }, take: 5000 }));
 });
 app.get("/api/events", eventsHandler);
-/** Agentlardan (sherikning kompyuteridan) kontakt va qo'ng'iroqlar. */
+/** Agentlardan (sherikning kompyuteridan) kontakt va qo'ng'iroqlar. Operator nomi tokenga bog'langan foydalanuvchidan olinadi. */
 app.post("/api/sync", async (req, res) => {
-  const r = await applySync(req.body);
+  const u = req.user!;
+  if (!u.operator) throw new HttpError(403, "Bu hisobga operator bog'lanmagan — sync qila olmaydi");
+  const r = await applySync({ ...(req.body ?? {}), operator: u.operator });
   if (r.added || r.calls || r.warnings.length) broadcast("sync", r);
   res.json(r);
 });
+app.use("/api", meRouter);
+app.use("/api/users", requireRole("dev"), usersRouter);
 app.use("/api/operators", operatorsRouter);
-app.use("/api/columns", columnsRouter);
+app.use("/api/columns", requireRole("dev", "pm"), columnsRouter);
 app.use("/api/leads", leadsRouter);
+app.use("/api/sync/local", requireRole("dev", "pm"));
+app.use("/api/export.csv", requireRole("dev", "pm"));
+app.use("/api/import/csv", requireRole("dev", "pm"));
 app.use("/api", importExportRouter);
+app.use("/api/stats", requireRole("dev", "pm"));
 app.use("/api", statsRouter);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Bunday API yo'q" }));
 
@@ -70,6 +79,7 @@ const onError: ErrorRequestHandler = (err, _req, res, _next) => {
 app.use(onError);
 
 await ensureDefaultColumns();
+await ensureInitialUser();
 // Shu kompyuterdagi softphone'ga yangi kontakt/qo'ng'iroq tushsa doskaga yoziladi va ochiq sahifalar yangilanadi
 watchLocal((r) => {
   if (r.added) console.log(`${r.operator}: ${r.added} ta yangi kontakt — ${r.names.join(", ")}`);

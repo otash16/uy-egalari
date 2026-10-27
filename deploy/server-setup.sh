@@ -7,12 +7,12 @@ DOMAIN=doska.zapusk.uz
 cd "$APP"
 mkdir -p data
 
-# Umumiy parol: birinchi marta yaratiladi va .env da qoladi
+# Birinchi dasturchi (otajon) paroli: bazada foydalanuvchi bo'lmasa server shundan yaratadi; keyin saytdan o'zgartiriladi
 if [ ! -f .env ] || ! grep -q '^BOARD_PASSWORD=.\+' .env; then
   PW="$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 14)"
   echo "BOARD_PASSWORD=$PW" > .env
   chmod 600 .env
-  echo "Yangi parol yaratildi → $APP/.env"
+  echo "Boshlang'ich parol yaratildi → $APP/.env"
 fi
 
 docker compose up -d --build --remove-orphans

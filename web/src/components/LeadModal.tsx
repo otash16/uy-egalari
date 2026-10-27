@@ -13,6 +13,9 @@ type Props = {
   operators: Operator[];
   /** Brauzerda tanlangan operator — yangi karta shu nomga yoziladi */
   me: string;
+  /** Mas'ulni istalgan operatorga qo'yish mumkinmi (dasturchi, PM). Aks holda faqat o'zi yoki bo'sh. */
+  anyOperator: boolean;
+  canDelete: (lead: Lead) => boolean;
   leads: Lead[];
   callsByKey: Map<string, Call[]>;
   onClose: () => void;
@@ -21,7 +24,7 @@ type Props = {
   onOpenOther: (lead: Lead) => void;
 };
 
-export function LeadModal({ lead, columnId, prefill, columns, operators, me, leads, callsByKey, onClose, onSave, onDelete, onOpenOther }: Props) {
+export function LeadModal({ lead, columnId, prefill, columns, operators, me, anyOperator, canDelete, leads, callsByKey, onClose, onSave, onDelete, onOpenOther }: Props) {
   const [form, setForm] = useState<LeadInput>(() => ({
     ownerName: lead?.ownerName ?? "",
     phone: lead?.phone ? fmtPhone(lead.phone) : "",
@@ -177,7 +180,7 @@ export function LeadModal({ lead, columnId, prefill, columns, operators, me, lea
           <label htmlFor="f_op">Mas'ul operator</label>
           <select id="f_op" value={form.operator} onChange={(e) => set("operator", e.target.value)}>
             <option value="">— belgilanmagan —</option>
-            {operators.map((o) => (
+            {operators.filter((o) => anyOperator || o.name === me).map((o) => (
               <option key={o.name} value={o.name}>
                 {o.name}
                 {o.name === me ? " (men)" : ""}
@@ -203,7 +206,7 @@ export function LeadModal({ lead, columnId, prefill, columns, operators, me, lea
           <textarea id="f_note" value={form.note} onChange={(e) => set("note", e.target.value)} placeholder="Narxi, gaplashilgan vaqt, e'tirozlar…" />
         </div>
         <div className="foot">
-          {lead && (
+          {lead && canDelete(lead) && (
             <button
               className={"btn danger" + (armed ? " armed" : "")}
               type="button"

@@ -4,16 +4,13 @@ Sizda ikkita narsa bo'ladi:
 1. **Doska** — brauzerda ochiladi, o'rnatish shart emas.
 2. **Agent** — kichik dastur, MicroSIP'dagi qo'ng'iroqlaringizni doskaga yuborib turadi. Bir marta o'rnatiladi.
 
-Ikkala kompyuter **bitta ofis Wi-Fi/tarmog'ida** bo'lishi kerak. Serverning manzilini sherigingiz beradi,
-masalan `http://192.168.15.179:4100` (u `yarn ip` bilan ko'radi).
+Doska internetda: **https://doska.zapusk.uz**. Login, parol va agent tokenini sherigingiz beradi.
 
 ## 1. Doska
 
-Brauzerda `http://192.168.15.179:4100` ni oching (manzilni o'zingiznikiga almashtiring), yulduzchaga qo'shib qo'ying.
-Birinchi ochilganda **"Siz kimsiz?"** so'raydi — ismingizni tanlang yoki yozing (masalan `Akbar`). Shu bilan tamom:
-siz qo'shgan kartalar sizning nomingizda bo'ladi.
-
-Ochilmasa: server kompyuteri yoqiqmi, bitta tarmoqdami, manzil to'g'rimi — tekshiring.
+Brauzerda https://doska.zapusk.uz ni oching, yulduzchaga qo'shib qo'ying. Login va parolingizni kiriting —
+brauzer 180 kun eslab qoladi. Siz qo'shgan kartalar sizning nomingizda bo'ladi.
+Parolni o'zgartirish: yuqori o'ngdagi ismingiz → "Parolni o'zgartirish".
 
 ## 2. Agent
 
@@ -23,19 +20,21 @@ Ochilmasa: server kompyuteri yoqiqmi, bitta tarmoqdami, manzil to'g'rimi — tek
 3. Papkadagi `config.json` ni Bloknotda oching va tekshiring:
    ```json
    {
-     "server": "http://192.168.15.179:4100",
+     "server": "https://doska.zapusk.uz",
      "operator": "Akbar",
      "softphone": "microsip",
-     "path": ""
+     "path": "",
+     "token": "sherigingiz bergan agent tokeni"
    }
    ```
-   - `server` — doska manzili (1-bo'limdagi bilan bir xil)
-   - `operator` — doskada tanlagan ismingiz bilan **bir xil** yozilsin
+   - `server` — doska manzili
+   - `token` — sizning agent tokeningiz (parol emas). Shu token orqali server sizni taniydi.
+   - `operator` — faqat oynada ko'rsatish uchun; doskada ism tokendan olinadi
    - `path` — bo'sh qoldiring. MicroSIP portable (o'rnatilmagan, papkadan ishlaydigan) bo'lsa,
      `microsip.exe` turgan papkani yozing, masalan `"C:\\MicroSIP"` (ikki teskari chiziq bilan).
 4. `start-agent.bat` ni ikki marta bosing. Birinchi safar paketlarni o'rnatadi (internet kerak), keyin qora oyna ochiladi:
    ```
-   Uy egalari agenti — operator: Akbar, microsip (C:\Users\...\AppData\Roaming\MicroSIP) → http://192.168.15.179:4100
+   Uy egalari agenti — operator: Akbar, microsip (C:\Users\...\AppData\Roaming\MicroSIP) → https://doska.zapusk.uz
    10:15:02  +0 kontakt, +37 qo'ng'iroq
    ```
    Oynani **yopmang**, kichraytirib qo'ying (yopsangiz qo'ng'iroqlar doskaga tushmay turadi; qayta ochsangiz hammasini yetkazadi).

@@ -44,8 +44,10 @@ Batafsil: [docs/SHERIK-WINDOWS.md](docs/SHERIK-WINDOWS.md).
 
 ## Qanday ishlaydi
 
-- Brauzer birinchi ochilganda **"Siz kimsiz?"** so'raladi — tanlov shu kompyuterda eslab qolinadi.
-  Siz qo'shgan kartalar sizning nomingizga yoziladi (kartada ham, qo'ng'iroqlarda ham ko'rinadi).
+- Har kim o'z **login va paroli** bilan kiradi. Rollar: **Dasturchi** (hammasi + `/users` sahifasida foydalanuvchilarni boshqarish),
+  **PM** (doska, ustunlar, import/export, dashboard), **Operator** (doska; mas'ulni faqat o'ziga qo'yadi, faqat o'z kartasini o'chiradi, dashboard yo'q).
+  Foydalanuvchiga **operator** bog'lansa (masalan Otajon, Akbar) u qo'shgan kartalar va qo'ng'iroqlar shu nomga yoziladi.
+  Yuqori o'ngdagi ism tugmasi: parolni o'zgartirish, foydalanuvchilar, chiqish.
 - Softphone'ga yangi kontakt qo'shilsa 4 soniya ichida doskaning birinchi ustuniga karta tushadi,
   mas'ul — o'sha kontaktni qo'shgan operator. Linphone'da OLX havolasi "Kompaniya" maydoniga,
   MicroSIP'da "Info" maydoniga yozilsa, kartada havola va uy nomi o'zi to'ladi.
@@ -66,8 +68,10 @@ Batafsil: [docs/SHERIK-WINDOWS.md](docs/SHERIK-WINDOWS.md).
 ## Internetdagi server (doska.zapusk.uz)
 
 Doska kompaniya serverida (46.8.176.152, `/opt/uy-egalari`, Docker, nginx → 127.0.0.1:8211) turadi.
-Sayt umumiy parol bilan ochiladi (`BOARD_PASSWORD`, serverdagi `.env`); agentlar `config.json` dagi `token` bilan yuboradi.
+Kirish — login/parol (User jadvali). Bazada hech kim bo'lmasa server birinchi dasturchini yaratadi: login `otajon`,
+parol `INIT_ADMIN_PASSWORD` yoki `BOARD_PASSWORD` (serverdagi `.env`), ikkisi ham bo'lmasa tasodifiy va logga yoziladi.
+Agentlar `config.json` dagi `token` bilan yuboradi — bu foydalanuvchining **agent tokeni** (`/users` → "Agent token"), operator nomi tokendan olinadi.
 
 - Yangi versiyani chiqarish: `yarn deploy` (rsync + `deploy/server-setup.sh`; baza `data/dev.db` saqlanib qoladi).
 - Mac'da server o'rniga **agent** ishlaydi: `agent/config.json` (server `https://doska.zapusk.uz`, `softphone: linphone`, `token`), `yarn agent:service:install`.
-- Sherik (Windows + MicroSIP): `config.json` da `server` = `https://doska.zapusk.uz`, `token` = parol.
+- Sherik (Windows + MicroSIP): `config.json` da `server` = `https://doska.zapusk.uz`, `token` = uning agent tokeni (`/users` sahifasidan).

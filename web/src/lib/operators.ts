@@ -1,21 +1,5 @@
 import type { Operator } from "../types";
 
-const KEY = "uy-egalari.operator";
-
-/** Brauzerda tanlangan "men" — localStorage'da, har kompyuterda o'ziniki. */
-export function getMe(): string {
-  try {
-    return localStorage.getItem(KEY) ?? "";
-  } catch {
-    return "";
-  }
-}
-export function setMe(name: string) {
-  try {
-    localStorage.setItem(KEY, name);
-  } catch {}
-}
-
 /** Operator → rang indeksi (--c0..--c5). Komponentlar chuqur bo'lgani uchun oddiy registr. */
 let colors = new Map<string, number>();
 export function setOperators(list: Operator[]) {

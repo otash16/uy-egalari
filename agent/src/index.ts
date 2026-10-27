@@ -2,7 +2,7 @@
  * Uy egalari doskasi — softphone agenti.
  * Shu kompyuterdagi Linphone/MicroSIP tarixini kuzatadi va yangi kontakt/qo'ng'iroqlarni serverga yuboradi.
  *
- *   config.json:  { "server": "https://doska.zapusk.uz", "operator": "Akbar", "softphone": "microsip", "path": "", "token": "<parol>" }
+ *   config.json:  { "server": "https://doska.zapusk.uz", "operator": "Akbar", "softphone": "microsip", "path": "", "token": "<agent tokeni>" }
  *   ishga tushirish:  yarn start   (yoki  npx tsx src/index.ts)
  */
 import fs from "node:fs";
@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { createSource } from "./softphone.js";
 import type { Softphone, SyncPayload, SyncResult } from "./types.js";
 
-type Config = { server: string; operator: string; softphone: Softphone; path?: string; intervalMs?: number; /** Serverning BOARD_PASSWORD paroli (internetdagi server uchun) */ token?: string };
+type Config = { server: string; operator: string; softphone: Softphone; path?: string; intervalMs?: number; /** Foydalanuvchining agent tokeni (/users → "Agent token"); operator nomi serverda tokendan olinadi */ token?: string };
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const configPath = process.env.AGENT_CONFIG ?? path.join(root, "config.json");

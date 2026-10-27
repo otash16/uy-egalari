@@ -9,6 +9,8 @@ type Props = {
   callsByKey: Map<string, Call[]>;
   q: string;
   me: string;
+  /** Ustun yaratish/tahrirlash tugmalari (dasturchi, PM) */
+  canEditColumns: boolean;
   onOpenLead: (lead: Lead) => void;
   onAddIn: (columnId: string) => void;
   onEditColumn: (column: Column) => void;
@@ -19,7 +21,7 @@ type Props = {
 
 type Drop = { columnId: string; beforeId: string | null };
 
-export function Board({ columns, leads, callsByKey, q, me, onOpenLead, onAddIn, onEditColumn, onNewColumn, onMove, onCopy }: Props) {
+export function Board({ columns, leads, callsByKey, q, me, canEditColumns, onOpenLead, onAddIn, onEditColumn, onNewColumn, onMove, onCopy }: Props) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [drop, setDrop] = useState<Drop | null>(null);
 
@@ -71,12 +73,14 @@ export function Board({ columns, leads, callsByKey, q, me, onOpenLead, onAddIn, 
                 {q ? `${list.length}/` : ""}
                 {all.length}
               </span>
-              <button className="icon-btn" type="button" onClick={() => onEditColumn(c)} aria-label="Ustunni tahrirlash">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 20h9" />
-                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                </svg>
-              </button>
+              {canEditColumns && (
+                <button className="icon-btn" type="button" onClick={() => onEditColumn(c)} aria-label="Ustunni tahrirlash">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                  </svg>
+                </button>
+              )}
             </div>
             <div className={"cards" + (isOver ? " over" : "")}>
               {list.map((l) => (
@@ -107,9 +111,11 @@ export function Board({ columns, leads, callsByKey, q, me, onOpenLead, onAddIn, 
           </section>
         );
       })}
-      <button className="new-col" type="button" onClick={onNewColumn}>
-        + Ustun qo'shish
-      </button>
+      {canEditColumns && (
+        <button className="new-col" type="button" onClick={onNewColumn}>
+          + Ustun qo'shish
+        </button>
+      )}
     </div>
   );
 }

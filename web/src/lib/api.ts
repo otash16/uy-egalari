@@ -1,4 +1,4 @@
-import type { Board, Call, Column, Lead, LeadInput, Operator, Stats, SyncResult } from "../types";
+import type { Board, Call, Column, Lead, LeadInput, Operator, Role, Stats, SyncResult, User } from "../types";
 
 async function request<T>(method: string, url: string, body?: unknown, contentType = "application/json"): Promise<T> {
   let res: Response;
@@ -12,11 +12,28 @@ async function request<T>(method: string, url: string, body?: unknown, contentTy
     throw new Error("Serverga ulanib bo'lmadi. Server turgan kompyuterda «yarn start» ishlab turganini tekshiring.");
   }
   const data = await res.json().catch(() => null);
+  if (res.status === 401) {
+    // Sessiya tugagan — login sahifasiga
+    location.href = "/login?next=" + encodeURIComponent(location.pathname + location.search);
+    throw new Error("Kirish kerak");
+  }
   if (!res.ok) throw new Error(data?.error ?? `Server xatosi (${res.status})`);
   return data as T;
 }
 
+export type UserInput = { login: string; name: string; role: Role; operator: string; password: string };
+
 export const api = {
+  me: () => request<User>("GET", "/api/me"),
+  changePassword: (current: string, next: string) => request<{ ok: true }>("POST", "/api/me/password", { current, next }),
+
+  users: () => request<User[]>("GET", "/api/users"),
+  createUser: (data: UserInput) => request<User>("POST", "/api/users", data),
+  updateUser: (id: string, data: Partial<UserInput> & { active?: boolean }) => request<User>("PATCH", `/api/users/${id}`, data),
+  deleteUser: (id: string) => request<{ ok: true }>("DELETE", `/api/users/${id}`),
+  userToken: (id: string) => request<{ token: string }>("GET", `/api/users/${id}/token`),
+  newUserToken: (id: string) => request<{ token: string }>("POST", `/api/users/${id}/token`),
+
   board: () => request<Board>("GET", "/api/board"),
   calls: () => request<Call[]>("GET", "/api/calls"),
   stats: () => request<Stats>("GET", "/api/stats"),

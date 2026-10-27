@@ -223,3 +223,31 @@ mark { background: var(--warn-soft); color: inherit; border-radius: 3px; padding
 .op-new { display: flex; gap: 8px; }
 .op-new input { flex: 1; height: 38px; border: 1px solid var(--line-2); border-radius: 9px; background: var(--surface-2); padding: 0 11px; outline: none; }
 .op-new input:focus { border-color: var(--accent); background: var(--surface); }
+
+/* foydalanuvchi menyusi */
+.me-btn .role { font-size: 11px; color: var(--muted); font-weight: 500; }
+.menu-head { padding: 8px 10px 6px; border-bottom: 1px solid var(--line); margin-bottom: 4px; display: flex; flex-direction: column; gap: 1px; }
+.menu-head small { color: var(--muted); font-size: 12px; }
+.hint.err { color: var(--danger); }
+.mono { font-family: var(--mono); font-size: 13px; }
+
+/* /users sahifasi */
+.users-page { display: flex; flex-direction: column; height: 100%; overflow: auto; }
+.users-body { padding: 16px; display: flex; flex-direction: column; gap: 16px; max-width: 1100px; }
+table.users { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+table.users th, table.users td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table.users th { font-size: 11.5px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.06em; background: var(--surface-2); }
+table.users tr:last-child td { border-bottom: 0; }
+table.users tr.off td { opacity: 0.55; }
+table.users .row-actions { display: flex; gap: 6px; justify-content: flex-end; white-space: nowrap; }
+table.users .row-actions .btn { height: 30px; padding: 0 10px; font-size: 13px; }
+.muted { color: var(--muted); }
+.role-chip { display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.role-chip.dev { background: var(--rm-soft); color: var(--rm); }
+.role-chip.pm { background: var(--olx-soft); color: var(--olx); }
+.role-chip.operator { background: var(--accent-soft); color: var(--accent); }
+.roles-help { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+@media (max-width: 800px) {
+  table.users th:nth-child(6), table.users td:nth-child(6) { display: none; }
+  table.users .row-actions { flex-wrap: wrap; justify-content: flex-start; }
+}

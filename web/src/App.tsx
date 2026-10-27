@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Board as BoardData, Call, Column, Lead, LeadInput, SyncResult, SyncWarning } from "./types";
+import { can, ROLE_LABEL, type Board as BoardData, type Call, type Column, type Lead, type LeadInput, type SyncResult, type SyncWarning, type User } from "./types";
 import { api } from "./lib/api";
 import { digits, fmtPhone, isPhoneQuery, matches, phoneKey, todayStr } from "./lib/text";
-import { getMe, isOnline, setMe as storeMe, setOperators } from "./lib/operators";
+import { isOnline, setOperators } from "./lib/operators";
 import { Board } from "./components/Board";
 import { LeadModal } from "./components/LeadModal";
 import { ColumnModal } from "./components/ColumnModal";
 import { CallsModal } from "./components/CallsModal";
-import { OperatorModal } from "./components/OperatorModal";
+import { PasswordModal } from "./components/PasswordModal";
 import { OpBadge } from "./components/OpBadge";
 import { SearchCalls, type UnknownNumber } from "./components/SearchCalls";
 import { fmtCallTime, groupCalls, isTalked, isToday } from "./lib/calls";
@@ -22,14 +22,18 @@ export default function App() {
   const [callsOpen, setCallsOpen] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [q, setQ] = useState("");
-  const [me, setMeState] = useState(getMe);
-  const [opOpen, setOpOpen] = useState(false);
+  /** Kirgan foydalanuvchi (login/parol bilan). me = unga bog'langan operator nomi. */
+  const [user, setUser] = useState<User | null>(null);
+  const me = user?.operator ?? "";
+  const perms = can(user);
+  const [pwOpen, setPwOpen] = useState(false);
   /** Doska filtri: "" — hammasi, aks holda operator nomi */
   const [filterOp, setFilterOp] = useState("");
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [leadDialog, setLeadDialog] = useState<LeadDialog | null>(null);
   const [columnDialog, setColumnDialog] = useState<ColumnDialog | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
+  /** Ochiq menyu: "" | "data" (Ma'lumotlar) | "user" */
+  const [menu, setMenu] = useState<"" | "data" | "user">("");
   const [toast, setToast] = useState("");
   const toastTimer = useRef<number | undefined>(undefined);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -55,6 +59,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    api.me().then(setUser).catch((e) => setLoadError((e as Error).message));
     reload();
   }, [reload]);
 
@@ -98,11 +103,11 @@ export default function App() {
 
   // Menyudan tashqariga bosilsa yopiladi
   useEffect(() => {
-    if (!menuOpen) return;
-    const onDown = (e: MouseEvent) => !(e.target as HTMLElement).closest(".actions") && setMenuOpen(false);
+    if (!menu) return;
+    const onDown = (e: MouseEvent) => !(e.target as HTMLElement).closest(".actions") && setMenu("");
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
-  }, [menuOpen]);
+  }, [menu]);
 
   /** Amalni bajaradi, xabar ko'rsatadi va doskani serverdan qayta yuklaydi. */
   async function run(fn: () => Promise<unknown>, okMsg?: string | ((r: any) => string)) {
@@ -123,21 +128,6 @@ export default function App() {
   const operators = board?.operators ?? [];
   const callsByKey = useMemo(() => groupCalls(calls), [calls]);
   const leadById = useMemo(() => new Map(leads.map((l) => [l.id, l])), [leads]);
-
-  // Brauzerda operator tanlanmagan yoki o'chirilgan bo'lsa — tanlashni so'raymiz
-  const needPick = !!board && (!me || !operators.some((o) => o.name === me));
-
-  async function pickMe(name: string) {
-    const ok = await run(async () => {
-      if (!operators.some((o) => o.name === name)) await api.createOperator(name);
-    });
-    if (!ok) return false;
-    storeMe(name);
-    setMeState(name);
-    setOpOpen(false);
-    showToast(`Siz: ${name}`);
-    return true;
-  }
 
   const shown = useMemo(() => (filterOp ? leads.filter((l) => l.operator === filterOp) : leads), [leads, filterOp]);
 
@@ -227,23 +217,34 @@ export default function App() {
           )}
         </div>
         <div className="actions">
-          <button className="btn me-btn" type="button" onClick={() => setOpOpen(true)} title="Operatorni o'zgartirish">
-            {me ? <OpBadge name={me} me={me} title="Siz" /> : "Siz kimsiz?"}
-          </button>
-          <a className="btn" href="/dashboard" title="Boshliqlar uchun voronka va statistika">
-            Dashboard
-          </a>
+          {perms.dashboard && (
+            <a className="btn" href="/dashboard" title="Boshliqlar uchun voronka va statistika">
+              Dashboard
+            </a>
+          )}
           <button className="btn" type="button" onClick={() => setCallsOpen(true)}>
             Qo'ng'iroqlar
           </button>
-          <button className="btn" type="button" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen}>
-            Ma'lumotlar ▾
-          </button>
+          {perms.manage && (
+            <button className="btn" type="button" onClick={() => setMenu((m) => (m === "data" ? "" : "data"))} aria-expanded={menu === "data"}>
+              Ma'lumotlar ▾
+            </button>
+          )}
           <button className="btn primary" type="button" onClick={newLeadFromSearch}>
             + Uy egasi
           </button>
-          {menuOpen && (
-            <div className="menu" onClick={() => setMenuOpen(false)}>
+          <button className="btn me-btn" type="button" onClick={() => setMenu((m) => (m === "user" ? "" : "user"))} aria-expanded={menu === "user"} title={user ? `${user.login} · ${ROLE_LABEL[user.role]}` : ""}>
+            {user ? (
+              <>
+                {me ? <OpBadge name={me} me={me} title="Siz" /> : <b>{user.name}</b>}
+                <small className="role">{ROLE_LABEL[user.role]}</small>
+              </>
+            ) : (
+              "…"
+            )}
+          </button>
+          {menu === "data" && (
+            <div className="menu" onClick={() => setMenu("")}>
               {localOp && (
                 <button
                   type="button"
@@ -275,6 +276,27 @@ export default function App() {
                 Yangi ustun
                 <small>Kanbanga bosqich qo'shish</small>
               </button>
+            </div>
+          )}
+          {menu === "user" && user && (
+            <div className="menu" onClick={() => setMenu("")}>
+              <div className="menu-head">
+                <b>{user.name}</b>
+                <small>
+                  {user.login} · {ROLE_LABEL[user.role]}
+                  {me ? ` · operator: ${me}` : ""}
+                </small>
+              </div>
+              <button type="button" onClick={() => setPwOpen(true)}>
+                Parolni o'zgartirish
+              </button>
+              {perms.users && (
+                <a href="/users">
+                  Foydalanuvchilar
+                  <small>Login, parol va rollar</small>
+                </a>
+              )}
+              <a href="/logout">Chiqish</a>
             </div>
           )}
           <input
@@ -378,6 +400,7 @@ export default function App() {
           callsByKey={callsByKey}
           q={q}
           me={me}
+          canEditColumns={perms.manage}
           onOpenLead={(lead) => setLeadDialog({ lead })}
           onAddIn={(columnId) => setLeadDialog({ columnId })}
           onEditColumn={(column) => setColumnDialog({ column })}
@@ -394,6 +417,8 @@ export default function App() {
           columns={columns}
           operators={operators}
           me={me}
+          anyOperator={perms.anyOperator}
+          canDelete={(l) => perms.manage || !l.operator || l.operator === me}
           leads={leads}
           callsByKey={callsByKey}
           onClose={() => setLeadDialog(null)}
@@ -443,7 +468,7 @@ export default function App() {
         />
       )}
 
-      {(needPick || opOpen) && board && <OperatorModal operators={operators} current={me} onPick={pickMe} onClose={needPick ? undefined : () => setOpOpen(false)} />}
+      {pwOpen && <PasswordModal onClose={() => setPwOpen(false)} onDone={showToast} />}
 
       {toast && (
         <div className="toast" role="status">

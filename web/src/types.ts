@@ -120,3 +120,29 @@ export type Stats = {
     created_ms: number;
   }[];
 };
+
+/** Foydalanuvchi roli: dasturchi | PM | operator */
+export type Role = "dev" | "pm" | "operator";
+export const ROLE_LABEL: Record<Role, string> = { dev: "Dasturchi", pm: "PM", operator: "Operator" };
+
+/** GET /api/me va /api/users — parolsiz foydalanuvchi. */
+export type User = {
+  id: string;
+  login: string;
+  name: string;
+  role: Role;
+  /** Bog'langan Operator.name, "" = yo'q */
+  operator: string;
+  active: boolean;
+  hasToken: boolean;
+  createdAt: string;
+};
+
+/** Rolga qarab UI ruxsatlari (server ham tekshiradi). */
+export const can = (u: User | null) => ({
+  manage: u?.role === "dev" || u?.role === "pm", // ustunlar, import/export, operatorlar
+  dashboard: u?.role === "dev" || u?.role === "pm",
+  users: u?.role === "dev",
+  /** Mas'ul operatorni istalgan odamga qo'yish */
+  anyOperator: u?.role === "dev" || u?.role === "pm",
+});

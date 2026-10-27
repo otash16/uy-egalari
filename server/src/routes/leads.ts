@@ -33,8 +33,9 @@ leadsRouter.post("/", async (req, res) => {
   if (!data.ownerName && !data.phone && !data.olxUrl) throw new HttpError(400, "Kamida ism, raqam yoki OLX havolasini kiriting");
   const columnId = await assertColumn(req.body?.columnId);
   if (!data.houseName && data.olxUrl) data.houseName = olxTitle(data.olxUrl);
-  // Mas'ul operator: so'rovda berilgan (brauzerdagi "Siz: ..." tanlovi), bo'lmasa bo'sh
+  // Mas'ul operator: so'rovda berilgan, bo'lmasa bo'sh. Operator rolidagi foydalanuvchi faqat o'z nomiga yoza oladi.
   if (data.operator) await ensureOperator(data.operator);
+  if (req.user!.role === "operator") data.operator = req.user!.operator;
   const lead = await prisma.lead.create({ data: { ...data, columnId, order: await topOrder(columnId) } });
   res.status(201).json(lead);
 });
@@ -44,6 +45,8 @@ leadsRouter.patch("/:id", async (req, res) => {
   if (!current) throw new HttpError(404, "Karta topilmadi");
   const data: Record<string, unknown> = pickLead(req.body);
   if (typeof data.operator === "string" && data.operator) await ensureOperator(data.operator);
+  if (req.user!.role === "operator" && typeof data.operator === "string" && data.operator && data.operator !== req.user!.operator)
+    throw new HttpError(403, "Operator mas'ulni faqat o'ziga qo'ya oladi");
   if (req.body?.columnId !== undefined && req.body.columnId !== current.columnId) {
     data.columnId = await assertColumn(req.body.columnId);
     data.order = await topOrder(req.body.columnId);
@@ -52,7 +55,10 @@ leadsRouter.patch("/:id", async (req, res) => {
 });
 
 leadsRouter.delete("/:id", async (req, res) => {
-  await prisma.lead.delete({ where: { id: req.params.id } });
+  const lead = await prisma.lead.findUnique({ where: { id: req.params.id } });
+  if (!lead) throw new HttpError(404, "Karta topilmadi");
+  if (req.user!.role === "operator" && lead.operator && lead.operator !== req.user!.operator) throw new HttpError(403, "Boshqa operatorning kartasini o'chira olmaysiz");
+  await prisma.lead.delete({ where: { id: lead.id } });
   res.json({ ok: true });
 });
 
