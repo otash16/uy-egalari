@@ -177,7 +177,6 @@ type SortKey = "owner" | "stage" | "calls" | "last_call_ms" | "created_ms";
 export function Dashboard() {
   const [data, setData] = useState<Stats | null>(null);
   const [error, setError] = useState("");
-  const [loadedAt, setLoadedAt] = useState<Date | null>(null);
   const [q, setQ] = useState("");
   const [stage, setStage] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("created_ms");
@@ -186,7 +185,6 @@ export function Dashboard() {
   const load = useCallback(async () => {
     try {
       setData(await api.stats());
-      setLoadedAt(new Date());
       setError("");
     } catch (e) {
       setError((e as Error).message);
@@ -236,17 +234,7 @@ export function Dashboard() {
           <div style={{ display: "grid", gap: 8 }}>
             <div className="dbrand"><i />Rentmi · Call-center <a href="/">← Doskaga</a></div>
             <h1>Uy egalari voronkasi</h1>
-            {S ? (
-              <p className="lede">
-                <b>{fmtN(S.leads)} uy egasi</b> doskaga olindi, <b>{pct(S.leads_talked / S.leads)}</b> bilan gaplashildi, <b>{fmtN(S.rentmi_placed)} tasi</b> Rentmi'ga joylandi. Hozircha <b>{fmtN(S.tenants)} ta</b> uyga ijarachi topildi.
-              </p>
-            ) : (
-              <p className="lede">{error ? "Ma'lumot yuklanmadi" : "Yuklanmoqda…"}</p>
-            )}
-          </div>
-          <div className="asof">
-            <span>Jonli, doska bazasidan. {loadedAt ? `Yangilangan ${fmtDT(loadedAt.getTime())}` : ""}{S?.last_call_ms ? ` · oxirgi qo'ng'iroq ${fmtDT(S.last_call_ms)}` : ""}</span>
-            <button type="button" onClick={load}>Yangilash</button>
+            {!S && <p className="lede">{error ? "Ma'lumot yuklanmadi" : "Yuklanmoqda…"}</p>}
           </div>
         </div>
         {error && <div className="error">{error}</div>}

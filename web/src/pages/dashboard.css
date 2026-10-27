@@ -17,9 +17,6 @@
 .dash .dbrand a:hover { text-decoration: underline; }
 .dash .lede { color: var(--d-muted); font-size: 16px; letter-spacing: -0.32px; max-width: 62ch; }
 .dash .lede b { color: var(--d-ink); font-weight: 600; }
-.dash .asof { font-size: 12px; color: var(--d-muted2); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.dash .asof button { border: 1px solid var(--d-line); background: var(--d-panel); color: var(--d-ink); border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 500; }
-.dash .asof button:hover { border-color: var(--d-blue); color: var(--d-blue); }
 .dash .error { background: var(--d-orange-soft); color: var(--d-orange-ink); padding: 12px 16px; border-radius: 16px; font-size: 14px; }
 
 .dash .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)); gap: 12px; }
