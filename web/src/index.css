@@ -11,18 +11,7 @@
   --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bg: #0f1513; --surface: #18201d; --surface-2: #1d2622; --col: #141b18;
-    --ink: #e6edea; --ink-2: #b3c0bb; --muted: #85938e; --line: #2a3531; --line-2: #36433e;
-    --accent: #4fb78f; --accent-ink: #06150f; --accent-soft: #183a2e;
-    --warn: #f0b35c; --warn-soft: #3a2a10; --danger: #f1897e; --danger-soft: #3d1b17;
-    --olx: #6cc5d6; --olx-soft: #14343b; --rm: #b9a2f2; --rm-soft: #2a2145;
-    --c0: #85938e; --c1: #6fa2f2; --c2: #e8a94a; --c3: #4fb78f; --c4: #ae8df0; --c5: #f08a5d;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35); --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.55);
-  }
-}
+/* Qorong'i rejim yo'q — doska, sidebar va foydalanuvchilar sahifasi doim yorug' (klinika/ofis talabi 2026-10-27). */
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body, #root { height: 100%; margin: 0; }

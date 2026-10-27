@@ -178,9 +178,10 @@ const THEMES: [Theme, string][] = [["light", "Yorug'"], ["dark", "Qorong'i"], ["
 function readTheme(): Theme {
   try {
     const t = localStorage.getItem("dash-theme");
-    return t === "light" || t === "dark" || t === "auto" ? t : "auto";
+    // Standart — yorug'. Qorong'i/Avto faqat foydalanuvchi o'zi tanlasa.
+    return t === "light" || t === "dark" || t === "auto" ? t : "light";
   } catch {
-    return "auto";
+    return "light";
   }
 }
 
