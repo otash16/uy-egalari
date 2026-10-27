@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 /// Operator (call-centerda ishlovchi odam). Har bir karta va qo'ng'iroq operatorga bog'lanadi.

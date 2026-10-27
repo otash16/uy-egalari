@@ -1,5 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 
+// Standart: server/prisma/dev.db (Prisma nisbiy yo'lni schema.prisma joyidan hisoblaydi). Docker: DATABASE_URL=file:/data/dev.db
+process.env.DATABASE_URL ??= "file:./dev.db";
+
 export const prisma = new PrismaClient();
 
 const DEFAULT_COLUMNS = ["Yangi", "Qo'ng'iroq qilindi", "Qayta qo'ng'iroq", "Rozi bo'ldi", "Rentmi'ga joylandi", "Rad etdi"];

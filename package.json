@@ -10,7 +10,10 @@
     "service:install": "zsh scripts/install-service.sh",
     "service:uninstall": "zsh scripts/install-service.sh uninstall",
     "agent:pack": "zsh scripts/pack-agent.sh",
-    "ip": "ipconfig getifaddr en0 || ipconfig getifaddr en1"
+    "ip": "ipconfig getifaddr en0 || ipconfig getifaddr en1",
+    "deploy": "zsh scripts/deploy.sh",
+    "agent:service:install": "zsh scripts/install-agent-mac.sh",
+    "agent:service:uninstall": "zsh scripts/install-agent-mac.sh uninstall"
   },
   "devDependencies": {
     "concurrently": "9.2.1"

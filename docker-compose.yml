@@ -1,0 +1,15 @@
+# Production (46.8.176.152): nginx → 127.0.0.1:8211 → konteyner. Baza ./data/dev.db da, rebuild'da saqlanadi.
+services:
+  app:
+    build: .
+    image: uy-egalari:latest
+    container_name: uy-egalari
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8211:4100"
+    env_file: .env          # BOARD_PASSWORD=...
+    volumes:
+      - ./data:/data
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }

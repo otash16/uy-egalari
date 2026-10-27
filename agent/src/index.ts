@@ -2,7 +2,7 @@
  * Uy egalari doskasi — softphone agenti.
  * Shu kompyuterdagi Linphone/MicroSIP tarixini kuzatadi va yangi kontakt/qo'ng'iroqlarni serverga yuboradi.
  *
- *   config.json:  { "server": "http://192.168.1.10:4100", "operator": "Akbar", "softphone": "microsip", "path": "" }
+ *   config.json:  { "server": "https://doska.zapusk.uz", "operator": "Akbar", "softphone": "microsip", "path": "", "token": "<parol>" }
  *   ishga tushirish:  yarn start   (yoki  npx tsx src/index.ts)
  */
 import fs from "node:fs";
@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { createSource } from "./softphone.js";
 import type { Softphone, SyncPayload, SyncResult } from "./types.js";
 
-type Config = { server: string; operator: string; softphone: Softphone; path?: string; intervalMs?: number };
+type Config = { server: string; operator: string; softphone: Softphone; path?: string; intervalMs?: number; /** Serverning BOARD_PASSWORD paroli (internetdagi server uchun) */ token?: string };
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const configPath = process.env.AGENT_CONFIG ?? path.join(root, "config.json");
@@ -47,7 +47,7 @@ let warned = "";
 async function send(payload: SyncPayload): Promise<SyncResult> {
   const res = await fetch(cfg.server + "/api/sync", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(cfg.token ? { Authorization: "Bearer " + cfg.token } : {}) },
     body: JSON.stringify(payload),
   });
   const data = (await res.json().catch(() => null)) as any;

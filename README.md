@@ -62,3 +62,12 @@ Batafsil: [docs/SHERIK-WINDOWS.md](docs/SHERIK-WINDOWS.md).
 - Bazani brauzerda ko'rish: `yarn --cwd server db:studio`.
 - **Ma'lumotlar ▾** menyusi: *Softphone'dan yangilash* (server kompyuterining softphone'i, odatda kerak emas — o'zi 4 soniyada yangilanadi),
   *CSV yuklab olish* / *CSV'dan import* (Excel zaxirasi, "Mas'ul" ustuni bilan).
+
+## Internetdagi server (doska.zapusk.uz)
+
+Doska kompaniya serverida (46.8.176.152, `/opt/uy-egalari`, Docker, nginx → 127.0.0.1:8211) turadi.
+Sayt umumiy parol bilan ochiladi (`BOARD_PASSWORD`, serverdagi `.env`); agentlar `config.json` dagi `token` bilan yuboradi.
+
+- Yangi versiyani chiqarish: `yarn deploy` (rsync + `deploy/server-setup.sh`; baza `data/dev.db` saqlanib qoladi).
+- Mac'da server o'rniga **agent** ishlaydi: `agent/config.json` (server `https://doska.zapusk.uz`, `softphone: linphone`, `token`), `yarn agent:service:install`.
+- Sherik (Windows + MicroSIP): `config.json` da `server` = `https://doska.zapusk.uz`, `token` = parol.

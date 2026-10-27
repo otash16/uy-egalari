@@ -13,6 +13,7 @@ import { operatorsRouter } from "./routes/operators.js";
 import { statsRouter } from "./routes/stats.js";
 import { applySync } from "./sync.js";
 import { localOperator, watchLocal } from "./local.js";
+import { authMiddleware, loginRouter } from "./auth.js";
 
 const PORT = Number(process.env.PORT ?? 4100);
 // Ofis tarmog'idagi sherik ham ochishi uchun hamma interfeyslarda eshitadi. Faqat o'zim uchun: HOST=127.0.0.1
@@ -21,6 +22,11 @@ const app = express();
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.text({ type: ["text/csv", "text/plain"], limit: "10mb" }));
+app.use(express.urlencoded({ extended: false }));
+// Nginx orqasida: x-forwarded-proto to'g'ri o'qilsin (cookie Secure uchun)
+app.set("trust proxy", "loopback");
+app.use(loginRouter);
+app.use(authMiddleware);
 
 app.get("/api/board", async (_req, res) => {
   const [columns, leads, operators] = await Promise.all([

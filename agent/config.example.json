@@ -1,6 +1,7 @@
 {
-  "server": "http://192.168.15.179:4100",
+  "server": "https://doska.zapusk.uz",
   "operator": "Akbar",
   "softphone": "microsip",
-  "path": ""
+  "path": "",
+  "token": ""
 }
