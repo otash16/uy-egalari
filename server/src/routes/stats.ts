@@ -38,7 +38,13 @@ statsRouter.get("/stats", async (_req, res) => {
   const isTenant = (name: string) => /^Gaplashildi/i.test(name);
 
   const leadsCalled = leads.filter((l) => leadCalls(l).length > 0).length;
-  const leadsTalked = leads.filter((l) => leadCalls(l).some(isTalk)).length;
+  // "Gaplashilgan": javob berilgan qo'ng'irog'i bor, yoki operator qo'lda "Gaplashildi" deb belgilagan,
+  // yoki karta allaqachon Rentmi/Ijarachi bosqichida (u yerga gaplashmasdan o'tib bo'lmaydi)
+  const talkedLead = (l: (typeof leads)[number]) => {
+    const col = colName.get(l.columnId) ?? "";
+    return l.callResult === "talked" || isPlaced(col) || isTenant(col) || leadCalls(l).some(isTalk);
+  };
+  const leadsTalked = leads.filter(talkedLead).length;
   const successCalls = calls.filter((c) => c.status === "success");
   const talkSeconds = calls.reduce((s, c) => s + c.duration, 0);
   const talked = calls.filter(isTalk);
