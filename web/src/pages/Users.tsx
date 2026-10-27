@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { api, type UserInput } from "../lib/api";
 import { can, type Operator, type User } from "../types";
 import { Modal } from "../components/Modal";
+import { Icon } from "../components/Icon";
 
 const fmtDate = (s: string) => new Date(s).toLocaleDateString("ru-RU");
 
@@ -60,17 +61,14 @@ export function UsersPage() {
 
   return (
     <div className="users-page">
-      <div className="top">
-        <div className="brand">
+      <div className="page-head">
+        <div>
           <h1>Foydalanuvchilar</h1>
-          <span className="sub">Kim qaysi login bilan kiradi va nima qila oladi</span>
+          <p>Kim qaysi login bilan kiradi va nima qila oladi</p>
         </div>
-        <div className="actions">
-          <a className="btn" href="/">
-            ← Doskaga
-          </a>
+        <div className="page-actions">
           <button className="btn primary" type="button" onClick={() => setEdit("new")}>
-            + Foydalanuvchi
+            <Icon name="plus" size={16} strokeWidth={2.2} /> Foydalanuvchi
           </button>
         </div>
       </div>
@@ -83,7 +81,9 @@ export function UsersPage() {
         </div>
       )}
       <div className="users-body">
-        <table className="users">
+        <div className="tcard">
+          <div className="tscroll">
+        <table className="data users">
           <thead>
             <tr>
               <th>Ism</th>
@@ -100,34 +100,34 @@ export function UsersPage() {
               <tr key={u.id} className={u.active ? "" : "off"}>
                 <td>
                   <b>{u.name}</b>
-                  {u.id === me?.id && <small> (siz)</small>}
+                  {u.id === me?.id && <small className="muted"> (siz)</small>}
                 </td>
                 <td className="mono">{u.login}</td>
                 <td className="access">
                   {u.isAdmin ? (
-                    <span className="role-chip dev">Dasturchi</span>
+                    <span className="badge dev">Dasturchi</span>
                   ) : (
                     <>
-                      {u.canBoard && <span className="role-chip operator">Kanban</span>}
-                      {u.canDashboard && <span className="role-chip pm">Dashboard</span>}
+                      {u.canBoard && <span className="badge operator">Kanban</span>}
+                      {u.canDashboard && <span className="badge pm">Dashboard</span>}
                       {!u.canBoard && !u.canDashboard && <span className="muted">ruxsat yo'q</span>}
                     </>
                   )}
                 </td>
                 <td>{u.operator || <span className="muted">—</span>}</td>
-                <td>{u.active ? "Faol" : "O'chirilgan"}</td>
+                <td>{u.active ? <span className="badge ok">Faol</span> : <span className="badge off">O'chirilgan</span>}</td>
                 <td className="muted">{fmtDate(u.createdAt)}</td>
                 <td className="row-actions">
-                  <button className="btn" type="button" onClick={() => setEdit(u)}>
-                    Tahrirlash
+                  <button className="btn sm" type="button" onClick={() => setEdit(u)}>
+                    <Icon name="edit" size={14} /> Tahrirlash
                   </button>
                   {u.operator && (
-                    <button className="btn" type="button" title="Softphone agenti uchun token" onClick={() => run(async () => setToken({ user: u, token: (await api.userToken(u.id)).token }))}>
+                    <button className="btn sm" type="button" title="Softphone agenti uchun token" onClick={() => run(async () => setToken({ user: u, token: (await api.userToken(u.id)).token }))}>
                       Agent token
                     </button>
                   )}
                   {u.id !== me?.id && (
-                    <button className="btn" type="button" onClick={() => run(() => api.updateUser(u.id, { active: !u.active }), u.active ? "Kirish yopildi" : "Kirish ochildi")}>
+                    <button className="btn sm" type="button" onClick={() => run(() => api.updateUser(u.id, { active: !u.active }), u.active ? "Kirish yopildi" : "Kirish ochildi")}>
                       {u.active ? "O'chirish" : "Yoqish"}
                     </button>
                   )}
@@ -136,15 +136,17 @@ export function UsersPage() {
             ))}
           </tbody>
         </table>
+          </div>
+        </div>
         <div className="roles-help">
           <div>
-            <span className="role-chip dev">Dasturchi</span> <span className="muted">Hammasi: kanban, dashboard, ustunlar, import/export va foydalanuvchilar</span>
+            <span className="badge dev">Dasturchi</span> <span className="muted">Hammasi: kanban, dashboard, ustunlar, import/export va foydalanuvchilar</span>
           </div>
           <div>
-            <span className="role-chip operator">Kanban</span> <span className="muted">Doska: karta qo'shish, tahrirlash, surish. Mas'ulni faqat o'ziga qo'yadi, faqat o'z kartasini o'chiradi</span>
+            <span className="badge operator">Kanban</span> <span className="muted">Doska: karta qo'shish, tahrirlash, surish. Mas'ulni faqat o'ziga qo'yadi, faqat o'z kartasini o'chiradi</span>
           </div>
           <div>
-            <span className="role-chip pm">Dashboard</span> <span className="muted">Boshliqlar uchun voronka va statistika</span>
+            <span className="badge pm">Dashboard</span> <span className="muted">Boshliqlar uchun voronka va statistika</span>
           </div>
         </div>
       </div>

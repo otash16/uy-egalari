@@ -138,15 +138,32 @@ export async function ensureInitialUser() {
 
 // ---------- login sahifasi ----------
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
-const page = (error = "", login = "") => `<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Uy egalari doskasi — kirish</title>
-<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f2f2f2;font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;color:#0f0f0f}
-form{background:#fff;border-radius:20px;padding:28px;width:min(92vw,360px);display:grid;gap:12px}h1{margin:0 0 4px;font-size:20px}p{margin:0;color:#6a6a6a;font-size:13px}
-input{font:inherit;padding:12px 14px;border:1px solid #d2d2d2;border-radius:12px}input:focus{outline:2px solid #2f6bff;border-color:#2f6bff}
-button{font:inherit;font-weight:600;padding:13px;border:0;border-radius:999px;background:#2f6bff;color:#fff;cursor:pointer}.err{color:#cf0f0f;font-size:13px}</style></head>
-<body><form method="post" action="/login"><h1>Uy egalari doskasi</h1><p>Login va parolingizni kiriting.</p>
-<input type="text" name="login" placeholder="Login" value="${esc(login)}" autofocus autocomplete="username" autocapitalize="none" spellcheck="false" required>
-<input type="password" name="password" placeholder="Parol" autocomplete="current-password" required>
-<input type="hidden" name="next" id="next">${error ? `<div class="err">${esc(error)}</div>` : ""}<button type="submit">Kirish</button></form>
+const page = (error = "", login = "") => `<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Uy egalari — kirish</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 20px;background:radial-gradient(900px 480px at 18% 8%,#eef3fb 0%,transparent 60%),linear-gradient(160deg,#f7f9fc 0%,#eef1f6 100%);font:14px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#334155;-webkit-font-smoothing:antialiased}
+.card{display:grid;grid-template-columns:1fr;width:100%;max-width:860px;overflow:hidden;border-radius:16px;border:1px solid #e2e8f0;background:#fff;box-shadow:0 18px 50px -18px rgba(15,42,50,.22),0 2px 8px rgba(15,42,50,.04)}
+.brand{display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;border-right:1px solid #e2e8f0;padding:48px 40px;text-align:center;background:linear-gradient(165deg,#fbfcfe 0%,#eef3fb 100%)}
+.logo{width:76px;height:76px;border-radius:22px;background:#0284c7;color:#fff;display:grid;place-items:center;box-shadow:0 10px 28px rgba(2,132,199,.32)}.logo.sm{width:52px;height:52px;border-radius:15px;margin:0 auto 22px}
+.brand h1{margin:0;font-size:28px;font-weight:800;color:#0284c7;line-height:1.2}.brand p{margin:0;max-width:270px;color:#64748b;font-size:14px;line-height:1.6}
+form{display:flex;flex-direction:column;justify-content:center;padding:32px 28px}
+@media(min-width:768px){.card{grid-template-columns:1fr 1fr}.brand{display:flex}form{padding:48px 40px}.logo.sm{display:none}}
+h2{margin:0;font-size:22px;font-weight:800;color:#0f172a}.sub{margin:6px 0 0;color:#64748b}
+label{display:block;margin:20px 0 6px;font-size:13px;font-weight:500;color:#334155}
+.in{position:relative}.in svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#8a93a6;pointer-events:none}
+input{width:100%;font:inherit;padding:12px 16px 12px 42px;border:1px solid #e2e8f0;border-radius:10px;background:#eaeffb;color:#0f172a;outline:none;transition:border-color .15s,box-shadow .15s,background .15s}input::placeholder{color:#8a93a6}input:focus{border-color:#0284c7;box-shadow:0 0 0 3px rgba(2,132,199,.22);background:#fff}
+.err{margin-top:20px;display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:10px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;font-size:14px}
+button{margin-top:24px;font:inherit;font-weight:600;font-size:15px;height:46px;border:0;border-radius:10px;background:#0284c7;color:#fff;cursor:pointer;box-shadow:0 4px 12px rgba(2,132,199,.24);display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}button:hover{background:#0369a1}
+.foot{margin-top:22px;font-size:12px;color:#94a3b8;text-align:center}</style></head>
+<body><div class="card">
+<div class="brand"><div class="logo"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/></svg></div>
+<h1>Uy egalari</h1><p>Call-center doskasi: OLX e'lonlarini Rentmi'ga ko'chirish va boshliqlar uchun voronka.</p></div>
+<form method="post" action="/login"><div class="logo sm"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-6h4v6"/></svg></div>
+<h2>Tizimga kirish</h2><p class="sub">Hisobingizga kirish uchun login va parolingizni kiriting</p>
+${error ? `<div class="err" role="alert"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5M12 16h.01"/></svg><span>${esc(error)}</span></div>` : ""}
+<label for="login">Login</label><div class="in"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/></svg><input id="login" type="text" name="login" placeholder="Loginingiz" value="${esc(login)}" autofocus autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
+<label for="password">Parol</label><div class="in"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><input id="password" type="password" name="password" placeholder="••••••••" autocomplete="current-password" required></div>
+<input type="hidden" name="next" id="next"><button type="submit"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M9 16l4-4-4-4"/><path d="M13 12H3"/></svg>Kirish</button>
+<div class="foot">Uy egalari doskasi · Rentmi call-center</div></form></div>
 <script>document.getElementById("next").value=new URLSearchParams(location.search).get("next")||"/"</script></body></html>`;
 
 export const loginRouter = Router();

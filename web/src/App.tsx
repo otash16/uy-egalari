@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { accessLabel, can, type Board as BoardData, type Call, type Column, type Lead, type LeadInput, type SyncResult, type SyncWarning, type User } from "./types";
+import { can, type Board as BoardData, type Call, type Column, type Lead, type LeadInput, type SyncResult, type SyncWarning, type User } from "./types";
 import { api } from "./lib/api";
 import { digits, fmtPhone, isPhoneQuery, matches, phoneKey, todayStr } from "./lib/text";
 import { isOnline, setOperators } from "./lib/operators";
@@ -7,8 +7,7 @@ import { Board } from "./components/Board";
 import { LeadModal } from "./components/LeadModal";
 import { ColumnModal } from "./components/ColumnModal";
 import { CallsModal } from "./components/CallsModal";
-import { PasswordModal } from "./components/PasswordModal";
-import { OpBadge } from "./components/OpBadge";
+import { Icon } from "./components/Icon";
 import { SearchCalls, type UnknownNumber } from "./components/SearchCalls";
 import { fmtCallTime, groupCalls, isTalked, isToday } from "./lib/calls";
 
@@ -26,14 +25,13 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const me = user?.operator ?? "";
   const perms = can(user);
-  const [pwOpen, setPwOpen] = useState(false);
   /** Doska filtri: "" — hammasi, aks holda operator nomi */
   const [filterOp, setFilterOp] = useState("");
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [leadDialog, setLeadDialog] = useState<LeadDialog | null>(null);
   const [columnDialog, setColumnDialog] = useState<ColumnDialog | null>(null);
-  /** Ochiq menyu: "" | "data" (Ma'lumotlar) | "user" */
-  const [menu, setMenu] = useState<"" | "data" | "user">("");
+  /** Ochiq menyu: "" | "data" (Ma'lumotlar) */
+  const [menu, setMenu] = useState<"" | "data">("");
   const [toast, setToast] = useState("");
   const toastTimer = useRef<number | undefined>(undefined);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -111,7 +109,7 @@ export default function App() {
   // Menyudan tashqariga bosilsa yopiladi
   useEffect(() => {
     if (!menu) return;
-    const onDown = (e: MouseEvent) => !(e.target as HTMLElement).closest(".actions") && setMenu("");
+    const onDown = (e: MouseEvent) => !(e.target as HTMLElement).closest(".dd") && setMenu("");
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, [menu]);
@@ -205,96 +203,61 @@ export default function App() {
   const localOp = board?.localOperator ?? null;
 
   return (
-    <>
-      <div className="top">
-        <div className="brand">
-          <h1>Uy egalari doskasi</h1>
-          <span className="sub">OLX e'lonlarini Rentmi'ga ko'chirish</span>
+    <div className="kanban">
+      <div className="page-head">
+        <div>
+          <h1>Kanban</h1>
+          <p>OLX e'lonlarini Rentmi'ga ko'chirish: uy egasidan ijarachigacha</p>
         </div>
-        <div className="search">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
-          <input ref={searchRef} type="search" value={q} onChange={(e) => setQ(e.target.value.trimStart())} placeholder="Raqam, uy nomi, ism, OLX yoki Rentmi havolasi…  ( / )" autoComplete="off" aria-label="Qidirish" />
-          {q && (
-            <button className="clear" type="button" aria-label="Tozalash" onClick={() => setQ("")}>
-              ×
-            </button>
-          )}
-        </div>
-        <div className="actions">
+        <div className="page-actions">
           <button className="btn" type="button" onClick={() => setCallsOpen(true)}>
-            Qo'ng'iroqlar
+            <Icon name="phone" size={16} /> Qo'ng'iroqlar
           </button>
           {perms.manage && (
-            <button className="btn" type="button" onClick={() => setMenu((m) => (m === "data" ? "" : "data"))} aria-expanded={menu === "data"}>
-              Ma'lumotlar ▾
-            </button>
+            <div className="dd">
+              <button className="btn" type="button" onClick={() => setMenu((m) => (m === "data" ? "" : "data"))} aria-expanded={menu === "data"}>
+                <Icon name="database" size={16} /> Ma'lumotlar <Icon name="chevron" size={14} />
+              </button>
+              {menu === "data" && (
+                <div className="menu" onClick={() => setMenu("")}>
+                  {localOp && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        run(
+                          () => api.syncLocal(),
+                          (r: SyncResult) => {
+                            pushAlerts(r.warnings);
+                            return r.added || r.calls ? `${r.operator}: ${r.added} ta yangi kontakt, ${r.calls} ta yangi qo'ng'iroq` : "Softphone'da yangi narsa yo'q";
+                          },
+                        )
+                      }
+                    >
+                      Softphone'dan yangilash
+                      <small>
+                        {localOp}ning kontaktlari «{columns[0]?.name ?? "Yangi"}» ustuniga qo'shiladi
+                      </small>
+                    </button>
+                  )}
+                  <a href="/api/export.csv" download>
+                    CSV yuklab olish
+                    <small>Excel uchun zaxira nusxa</small>
+                  </a>
+                  <button type="button" onClick={() => fileRef.current?.click()}>
+                    CSV'dan import
+                    <small>Eski doskadan olingan CSV: raqami borlar yangilanadi</small>
+                  </button>
+                  <button type="button" onClick={() => setColumnDialog({})}>
+                    Yangi ustun
+                    <small>Kanbanga bosqich qo'shish</small>
+                  </button>
+                </div>
+              )}
+            </div>
           )}
           <button className="btn primary" type="button" onClick={newLeadFromSearch}>
-            + Uy egasi
+            <Icon name="plus" size={16} strokeWidth={2.2} /> Uy egasi
           </button>
-          <button className="btn me-btn" type="button" onClick={() => setMenu((m) => (m === "user" ? "" : "user"))} aria-expanded={menu === "user"} title={user ? `${user.login} · ${accessLabel(user)}` : ""}>
-            {user ? (
-              <>
-                {me ? <OpBadge name={me} me={me} title="Siz" /> : <b>{user.name}</b>}
-                <small className="role">{accessLabel(user)}</small>
-              </>
-            ) : (
-              "…"
-            )}
-          </button>
-          {menu === "data" && (
-            <div className="menu" onClick={() => setMenu("")}>
-              {localOp && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    run(
-                      () => api.syncLocal(),
-                      (r: SyncResult) => {
-                        pushAlerts(r.warnings);
-                        return r.added || r.calls ? `${r.operator}: ${r.added} ta yangi kontakt, ${r.calls} ta yangi qo'ng'iroq` : "Softphone'da yangi narsa yo'q";
-                      },
-                    )
-                  }
-                >
-                  Softphone'dan yangilash
-                  <small>
-                    {localOp}ning kontaktlari «{columns[0]?.name ?? "Yangi"}» ustuniga qo'shiladi
-                  </small>
-                </button>
-              )}
-              <a href="/api/export.csv" download>
-                CSV yuklab olish
-                <small>Excel uchun zaxira nusxa</small>
-              </a>
-              <button type="button" onClick={() => fileRef.current?.click()}>
-                CSV'dan import
-                <small>Eski doskadan olingan CSV: raqami borlar yangilanadi</small>
-              </button>
-              <button type="button" onClick={() => setColumnDialog({})}>
-                Yangi ustun
-                <small>Kanbanga bosqich qo'shish</small>
-              </button>
-            </div>
-          )}
-          {menu === "user" && user && (
-            <div className="menu" onClick={() => setMenu("")}>
-              <div className="menu-head">
-                <b>{user.name}</b>
-                <small>
-                  {user.login} · {accessLabel(user)}
-                  {me ? ` · operator: ${me}` : ""}
-                </small>
-              </div>
-              <button type="button" onClick={() => setPwOpen(true)}>
-                Parolni o'zgartirish
-              </button>
-              <a href="/logout">Chiqish</a>
-            </div>
-          )}
           <input
             ref={fileRef}
             type="file"
@@ -309,6 +272,16 @@ export default function App() {
         </div>
       </div>
 
+      <div className="toolbar">
+        <div className="search">
+          <Icon name="search" size={16} />
+          <input ref={searchRef} type="search" value={q} onChange={(e) => setQ(e.target.value.trimStart())} placeholder="Raqam, uy nomi, ism, OLX yoki Rentmi havolasi…  ( / )" autoComplete="off" aria-label="Qidirish" />
+          {q && (
+            <button className="clear" type="button" aria-label="Tozalash" onClick={() => setQ("")}>
+              ×
+            </button>
+          )}
+        </div>
       <div className="stats">
         {board ? (
           <>
@@ -346,6 +319,7 @@ export default function App() {
         ) : (
           <span>{loadError ? "Ma'lumot yo'q" : "Yuklanmoqda…"}</span>
         )}
+        </div>
       </div>
 
       {loadError && (
@@ -464,13 +438,11 @@ export default function App() {
         />
       )}
 
-      {pwOpen && <PasswordModal onClose={() => setPwOpen(false)} onDone={showToast} />}
-
       {toast && (
         <div className="toast" role="status">
           {toast}
         </div>
       )}
-    </>
+    </div>
   );
 }

@@ -17,7 +17,7 @@ const mins = (s: number) => (s >= 60 ? `${Math.floor(s / 60)} daq ${s % 60} s` :
 const hh = (h: number) => `${String(h).padStart(2, "0")}:00`;
 const STATUS: Record<string, string> = { success: "Gaplashildi", aborted: "Javob yo'q", declined: "Rad etildi", accepted_elsewhere: "Boshqa joyda javob berildi", missed: "O'tkazib yuborildi", early_aborted: "Erta uzildi", declined_elsewhere: "Boshqa joyda rad etildi", unknown: "Noma'lum" };
 const DIR: Record<string, string> = { out: "chiquvchi", in: "kiruvchi" };
-const stageClass = (s: string) => (/^Yangi/.test(s) ? "new" : /^Qo/.test(s) ? "called" : /^Rentmi/.test(s) ? "placed" : "tenant");
+const stageClass = (s: string) => (/^Yangi/.test(s) ? "new" : /^Qo/.test(s) ? "called" : /^Rentmi/.test(s) ? "placed" : /^Javob/.test(s) ? "no" : "tenant");
 const dayDate = (day: string) => new Date(day + "T00:00:00");
 
 /* ---------- umumiy: konteyner kengligi va tooltip ---------- */
@@ -39,7 +39,7 @@ type Tip = { x: number; y: number; body: ReactNode } | null;
 function useTip() {
   const [tip, setTip] = useState<Tip>(null);
   const show = (e: React.MouseEvent, body: ReactNode) => {
-    const r = (e.currentTarget as Element).closest(".card")!.getBoundingClientRect();
+    const r = (e.currentTarget as Element).closest(".panel")!.getBoundingClientRect();
     setTip({ x: e.clientX - r.left, y: e.clientY - r.top, body });
   };
   const hide = () => setTip(null);
@@ -173,17 +173,6 @@ const Tile = ({ k, v, s, cls }: { k: string; v: string; s: string; cls?: string 
 
 /* ---------- sahifa ---------- */
 type SortKey = "owner" | "stage" | "calls" | "last_call_ms" | "created_ms";
-type Theme = "light" | "dark" | "auto";
-const THEMES: [Theme, string][] = [["light", "Yorug'"], ["dark", "Qorong'i"], ["auto", "Avto"]];
-function readTheme(): Theme {
-  try {
-    const t = localStorage.getItem("dash-theme");
-    // Standart — yorug'. Qorong'i/Avto faqat foydalanuvchi o'zi tanlasa.
-    return t === "light" || t === "dark" || t === "auto" ? t : "light";
-  } catch {
-    return "light";
-  }
-}
 
 export function Dashboard() {
   const [data, setData] = useState<Stats | null>(null);
@@ -192,13 +181,6 @@ export function Dashboard() {
   const [stage, setStage] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("created_ms");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [theme, setTheme] = useState<Theme>(readTheme);
-  function pickTheme(t: Theme) {
-    setTheme(t);
-    try {
-      localStorage.setItem("dash-theme", t);
-    } catch {}
-  }
 
   const load = useCallback(async () => {
     try {
@@ -216,7 +198,7 @@ export function Dashboard() {
     return () => window.clearInterval(t);
   }, [load]);
   useEffect(() => {
-    document.title = "Uy egalari voronkasi";
+    document.title = "Dashboard — Uy egalari";
   }, []);
 
   const S = data?.summary[0];
@@ -248,20 +230,12 @@ export function Dashboard() {
   );
 
   return (
-    <div className="dash" data-theme={theme}>
+    <div className="dash">
       <div className="wrap">
-        <div className="head">
-          <div style={{ display: "grid", gap: 8 }}>
-            <div className="dbrand"><i />Rentmi · Call-center <a href="/logout">Chiqish</a></div>
-            <h1>Uy egalari voronkasi</h1>
-            {!S && <p className="lede">{error ? "Ma'lumot yuklanmadi" : "Yuklanmoqda…"}</p>}
-          </div>
-          <div className="theme" role="radiogroup" aria-label="Rejim">
-            {THEMES.map(([t, label]) => (
-              <button key={t} type="button" role="radio" aria-checked={theme === t} className={theme === t ? "on" : ""} onClick={() => pickTheme(t)}>
-                {label}
-              </button>
-            ))}
+        <div className="page-head">
+          <div>
+            <h1>Dashboard</h1>
+            <p>{S ? "Uy egalari voronkasi: OLX'dan Rentmi'gacha. Ma'lumot har daqiqada yangilanadi." : error ? "Ma'lumot yuklanmadi" : "Yuklanmoqda…"}</p>
           </div>
         </div>
         {error && <div className="error">{error}</div>}
@@ -281,12 +255,12 @@ export function Dashboard() {
             </section>
 
             <section className="grid">
-              <div className="card">
+              <div className="panel">
                 <h2>Voronka: uy egasidan ijarachigacha</h2>
                 <p className="note">Har bosqichga yetganlar soni. Qator ostida oldingi bosqichdan yo'qotish.</p>
                 <Funnel steps={[{ label: "Uy egalari", n: S.leads }, { label: "Qo'ng'iroq qilingan", n: S.leads_called }, { label: "Gaplashilgan", n: S.leads_talked }, { label: "Rentmi'ga joylangan", n: S.rentmi_placed }, { label: "Ijarachi topildi", n: S.tenants }]} />
               </div>
-              <div className="card">
+              <div className="panel">
                 <h2>Hozir doskada qaysi ustunda</h2>
                 <p className="note">Kartalar joriy holati bo'yicha. Yig'indisi jami uy egalariga teng.</p>
                 <HBars rows={[...data.funnel].sort((a, b) => a.step - b.step).map((d) => ({ key: d.stage, label: d.stage, value: d.n, color: /^Gaplashildi/.test(d.stage) ? "var(--d-green)" : "var(--d-blue)" }))} minHeight={120} />
@@ -294,13 +268,13 @@ export function Dashboard() {
             </section>
 
             <section className="grid">
-              <div className="card">
+              <div className="panel">
                 <h2>Kunlik qo'ng'iroqlar</h2>
                 <p className="note">Ustun: jami qo'ng'iroq. To'q qism: javob berilgan.</p>
                 <div className="legend"><span><i style={{ background: "var(--d-blue-soft)" }} />Jami</span><span><i style={{ background: "var(--d-blue)" }} />Javob berilgan</span></div>
                 <Columns rows={data.calls_by_day.map((d) => ({ key: d.day, label: fmtDay(dayDate(d.day)), head: fmtDay(dayDate(d.day)), total: d.n, ok: d.ok, extra: ["Gaplashuv", mins(d.talk_seconds)] }))} />
               </div>
-              <div className="card">
+              <div className="panel">
                 <h2>Kunlik yangi uy egalari</h2>
                 <p className="note">Doskaga qo'shilgan kartalar, kun bo'yicha.</p>
                 <Columns rows={data.leads_by_day.map((d) => ({ key: d.day, label: fmtDay(dayDate(d.day)), head: fmtDay(dayDate(d.day)), total: d.n }))} />
@@ -308,12 +282,12 @@ export function Dashboard() {
             </section>
 
             <section className="grid">
-              <div className="card">
+              <div className="panel">
                 <h2>Qo'ng'iroqlar natijasi</h2>
                 <p className="note">Softphone yozuvi bo'yicha. "Javob yo'q" — ko'tarilmagan yoki bekor qilingan chiquvchi qo'ng'iroq.</p>
                 <HBars rows={[...data.calls_by_status].sort((a, b) => b.n - a.n).map((d) => ({ key: `${d.status}|${d.direction}`, label: `${STATUS[d.status] ?? d.status} (${DIR[d.direction] ?? d.direction})`, value: d.n, color: d.status === "success" ? "var(--d-green)" : d.status === "declined" ? "var(--d-red)" : d.status === "aborted" ? "var(--d-orange)" : "var(--d-gray)", extra: ["Gaplashuv", mins(d.talk_seconds)] }))} />
               </div>
-              <div className="card">
+              <div className="panel">
                 <h2>Kun soatlari bo'yicha</h2>
                 <p className="note">Qaysi soatda ko'proq qo'ng'iroq qilinadi va javob olinadi.</p>
                 <div className="legend"><span><i style={{ background: "var(--d-blue-soft)" }} />Jami</span><span><i style={{ background: "var(--d-blue)" }} />Javob berilgan</span></div>
@@ -321,11 +295,11 @@ export function Dashboard() {
               </div>
             </section>
 
-            <section className="card">
+            <section className="panel">
               <h2>Operatorlar</h2>
               <p className="note">Har operatorning kartalari va qo'ng'iroqlari. Ulanish — agentidan oxirgi xabar.</p>
               <div className="tbox" style={{ maxHeight: "none" }}>
-                <table>
+                <table className="data">
                   <thead><tr><th>Operator</th><th className="n">Uy egalari</th><th className="n">Qo'ng'iroqlar</th><th className="n">Javob berilgan</th><th className="n">Gaplashuv</th><th>Softphone</th><th>Ulanish</th></tr></thead>
                   <tbody>
                     {data.by_operator.map((o) => (
@@ -344,7 +318,7 @@ export function Dashboard() {
               </div>
             </section>
 
-            <section className="card">
+            <section className="panel">
               <h2>Barcha uy egalari</h2>
               <p className="note">Doskadagi har bir karta: bosqichi, nechta qo'ng'iroq bo'lgani va oxirgi qo'ng'iroq. Sarlavhani bosib saralang.</p>
               <div className="tools">
@@ -356,7 +330,7 @@ export function Dashboard() {
                 <span className="note">{leadsShown.length === data.leads.length ? `${fmtN(leadsShown.length)} ta karta` : `${fmtN(leadsShown.length)} / ${fmtN(data.leads.length)} ta karta`}</span>
               </div>
               <div className="tbox">
-                <table>
+                <table className="data">
                   <thead>
                     <tr>
                       <Th k="owner">Uy egasi</Th>
