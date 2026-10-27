@@ -62,6 +62,7 @@ Baribir qilsangiz, ikkalangizning ekraningizda qizil ogohlantirish chiqadi.
 | Belgi | Sabab / yechim |
 |---|---|
 | `MicroSIP ma'lumotlari topilmadi` | MicroSIP hali bir marta ham ishlatilmagan yoki portable — `path` ni to'ldiring |
-| `Serverga ulanib bo'lmadi` / `fetch failed` | Server kompyuteri o'chiq, uxlayapti yoki IP o'zgargan — `config.json` dagi `server` ni yangilang |
+| `Serverga ulanib bo'lmadi` / `fetch failed` | Internet yo'q yoki `config.json` dagi `server` noto'g'ri (https://doska.zapusk.uz bo'lishi kerak) |
+| `401` / token xatosi | `config.json` dagi `token` noto'g'ri — sherigingizdan yangisini oling (/users → "Agent token") |
 | `Node.js topilmadi` | Node.js o'rnatilmagan yoki o'rnatgandan keyin kompyuter qayta yoqilmagan |
 | Qo'ng'iroqlar eski MicroSIP'da (3.20 va pastroq) | Agent `microsip.ini` dan ham o'qiy oladi, lekin yangi versiyaga o'tish yaxshiroq |

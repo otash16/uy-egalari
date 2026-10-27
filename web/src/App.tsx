@@ -25,8 +25,26 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const me = user?.operator ?? "";
   const perms = can(user);
-  /** Doska filtri: "" — hammasi, aks holda operator nomi */
-  const [filterOp, setFilterOp] = useState("");
+  /**
+   * Doska filtri: "" — hammasi, aks holda operator nomi.
+   * Dastlabki qiymat foydalanuvchi aniqlangach qo'yiladi: oddiy operator uchun "Meniki" (o'z kartalari),
+   * dasturchi uchun hammasi. Keyingi tanlov brauzerda eslab qolinadi (filterKey).
+   */
+  const [filterOp, setFilterOpState] = useState("");
+  const filterKey = user ? `board-filter:${user.login}` : "";
+  const setFilterOp = useCallback(
+    (op: string) => {
+      setFilterOpState(op);
+      if (filterKey) {
+        try {
+          localStorage.setItem(filterKey, op);
+        } catch {
+          /* private rejim va h.k. — e'tiborsiz */
+        }
+      }
+    },
+    [filterKey],
+  );
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [leadDialog, setLeadDialog] = useState<LeadDialog | null>(null);
   const [columnDialog, setColumnDialog] = useState<ColumnDialog | null>(null);
@@ -63,6 +81,14 @@ export default function App() {
         // Kanbanga ruxsati yo'q (masalan faqat dashboard) — o'z sahifasiga
         if (!can(u).board) return location.replace(can(u).dashboard ? "/dashboard" : "/login");
         setUser(u);
+        // Dastlabki filtr: eslab qolingan tanlov; bo'lmasa operator faqat o'zinikini ko'radi, dasturchi — hammasini
+        let saved: string | null = null;
+        try {
+          saved = localStorage.getItem(`board-filter:${u.login}`);
+        } catch {
+          /* e'tiborsiz */
+        }
+        setFilterOpState(saved ?? (u.isAdmin ? "" : u.operator));
       })
       .catch((e) => setLoadError((e as Error).message));
     reload();
