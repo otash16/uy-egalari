@@ -16,7 +16,7 @@ if [ ! -f .env ] || ! grep -q '^BOARD_PASSWORD=.\+' .env; then
 fi
 
 docker compose up -d --build --remove-orphans
-sleep 4
+sleep 10
 curl -fsS -o /dev/null -w "Konteyner: HTTP %{http_code}\n" http://127.0.0.1:8211/login
 
 # nginx sayti
