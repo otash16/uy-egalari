@@ -33,8 +33,10 @@ fi
 # HTTP/2 (bir marta): certbot 443 ni "listen 443 ssl" qilib yozadi — http2 qo'shamiz,
 # brauzer bitta ulanishda hamma faylni parallel oladi (HTTP/1.1 da 6 ta ulanish, har biri TLS to'laydi).
 SITE=/etc/nginx/sites-available/$DOMAIN
-if sudo grep -qE '^\s*listen .*443 ssl;' $SITE 2>/dev/null; then
-  sudo sed -i -E 's/^(\s*listen .*443 ssl);/\1 http2;/' $SITE
+# IPv4 ("listen 443 ssl;") va IPv6 ("listen [::]:443 ssl ipv6only=on;") qatorlari — ikkalasiga ham,
+# aks holda nginx "protocol options redefined" deb ogohlantiradi.
+if sudo grep -qE '^\s*listen .*443 ssl( ipv6only=on)?;' $SITE 2>/dev/null; then
+  sudo sed -i -E 's/^(\s*listen .*443 ssl)( ipv6only=on)?;/\1 http2\2;/' $SITE
   if sudo nginx -t; then sudo systemctl reload nginx && echo "nginx: HTTP/2 yoqildi"; else echo "nginx -t XATO — http2 qo'shilmadi, konfigni tekshiring"; fi
 fi
 curl -fsS -o /dev/null -w "https://$DOMAIN: HTTP %{http_code} (%{http_version})\n" https://$DOMAIN/login
