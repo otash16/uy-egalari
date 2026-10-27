@@ -270,7 +270,6 @@ export function Dashboard() {
               <Tile k="Qo'ng'iroq qilingan" v={fmtN(S.leads_called)} s={`${pct(S.leads_called / S.leads)} uy egalariga`} />
               <Tile k="Gaplashilgan" v={fmtN(S.leads_talked)} s={`${pct(S.leads_talked / S.leads)} uy egalaridan, kamida bir marta javob bergan`} />
               <Tile k="Rentmi'ga joylangan" v={fmtN(S.rentmi_placed)} s={`${pct(S.rentmi_placed / S.leads)} uy egalaridan`} />
-              <Tile k="Ijarachi topildi" v={fmtN(S.tenants)} s="ijarachi bilan gaplashildi" />
             </section>
             <section className="tiles" aria-label="Qo'ng'iroqlar">
               <Tile k="Jami qo'ng'iroqlar" v={fmtN(S.calls_total)} s={`${fmtN(S.calls_out)} tasi chiquvchi`} />
