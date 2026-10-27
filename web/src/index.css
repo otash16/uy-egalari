@@ -20,8 +20,8 @@
   --shadow-lg: 0 18px 50px -18px rgba(15, 42, 50, 0.22), 0 4px 12px rgba(15, 42, 50, 0.08);
   --shadow-primary: 0 4px 12px rgba(2, 132, 199, 0.24);
   --r: 10px; --r-sm: 6px; --r-card: 14px; --r-xl: 18px;
-  --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --sb-w: 272px; --sb-w-c: 72px; --tb-h: 64px;
   color-scheme: light;
 }
@@ -82,6 +82,7 @@ b, strong { font-weight: 600; }
 .tb-user > svg { color: var(--muted); }
 .page { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; padding: 20px; }
 .page > * { animation: page-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.page-loading { margin: auto; color: var(--muted); font-size: 14px; }
 
 /* ochiladigan menyu (topbar va «Ma'lumotlar») */
 .dd { position: relative; }
