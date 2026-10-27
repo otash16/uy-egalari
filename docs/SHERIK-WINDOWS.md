@@ -5,11 +5,11 @@ Sizda ikkita narsa bo'ladi:
 2. **Agent** — kichik dastur, MicroSIP'dagi qo'ng'iroqlaringizni doskaga yuborib turadi. Bir marta o'rnatiladi.
 
 Ikkala kompyuter **bitta ofis Wi-Fi/tarmog'ida** bo'lishi kerak. Serverning manzilini sherigingiz beradi,
-masalan `http://192.168.15.179:4000` (u `yarn ip` bilan ko'radi).
+masalan `http://192.168.15.179:4100` (u `yarn ip` bilan ko'radi).
 
 ## 1. Doska
 
-Brauzerda `http://192.168.15.179:4000` ni oching (manzilni o'zingiznikiga almashtiring), yulduzchaga qo'shib qo'ying.
+Brauzerda `http://192.168.15.179:4100` ni oching (manzilni o'zingiznikiga almashtiring), yulduzchaga qo'shib qo'ying.
 Birinchi ochilganda **"Siz kimsiz?"** so'raydi — ismingizni tanlang yoki yozing (masalan `Akbar`). Shu bilan tamom:
 siz qo'shgan kartalar sizning nomingizda bo'ladi.
 
@@ -23,7 +23,7 @@ Ochilmasa: server kompyuteri yoqiqmi, bitta tarmoqdami, manzil to'g'rimi — tek
 3. Papkadagi `config.json` ni Bloknotda oching va tekshiring:
    ```json
    {
-     "server": "http://192.168.15.179:4000",
+     "server": "http://192.168.15.179:4100",
      "operator": "Akbar",
      "softphone": "microsip",
      "path": ""
@@ -35,7 +35,7 @@ Ochilmasa: server kompyuteri yoqiqmi, bitta tarmoqdami, manzil to'g'rimi — tek
      `microsip.exe` turgan papkani yozing, masalan `"C:\\MicroSIP"` (ikki teskari chiziq bilan).
 4. `start-agent.bat` ni ikki marta bosing. Birinchi safar paketlarni o'rnatadi (internet kerak), keyin qora oyna ochiladi:
    ```
-   Uy egalari agenti — operator: Akbar, microsip (C:\Users\...\AppData\Roaming\MicroSIP) → http://192.168.15.179:4000
+   Uy egalari agenti — operator: Akbar, microsip (C:\Users\...\AppData\Roaming\MicroSIP) → http://192.168.15.179:4100
    10:15:02  +0 kontakt, +37 qo'ng'iroq
    ```
    Oynani **yopmang**, kichraytirib qo'ying (yopsangiz qo'ng'iroqlar doskaga tushmay turadi; qayta ochsangiz hammasini yetkazadi).

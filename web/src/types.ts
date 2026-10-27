@@ -81,3 +81,42 @@ export type SyncResult = {
   calls: number;
   warnings: SyncWarning[];
 };
+
+/** GET /api/stats — boshliqlar dashboardi uchun jonli statistika. */
+export type Stats = {
+  generated_at: string;
+  summary: [
+    {
+      leads: number;
+      leads_called: number;
+      leads_talked: number;
+      rentmi_placed: number;
+      tenants: number;
+      calls_total: number;
+      calls_out: number;
+      calls_success: number;
+      talk_seconds: number;
+      avg_talk_seconds: number;
+      operators: number;
+      last_call_ms: number | null;
+    },
+  ];
+  funnel: { stage: string; step: number; n: number }[];
+  leads_by_day: { day: string; n: number }[];
+  calls_by_day: { day: string; n: number; ok: number; outgoing: number; talk_seconds: number }[];
+  calls_by_status: { status: string; direction: string; n: number; talk_seconds: number }[];
+  calls_by_hour: { hour: number; n: number; ok: number }[];
+  by_operator: { operator: string; leads: number; calls: number; success: number; talk_seconds: number; softphone: string; last_sync_ms: number | null }[];
+  leads: {
+    id: string;
+    owner: string;
+    house: string;
+    stage: string;
+    operator: string;
+    result: string;
+    olx_url: string;
+    calls: number;
+    last_call_ms: number | null;
+    created_ms: number;
+  }[];
+};

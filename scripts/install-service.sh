@@ -42,7 +42,7 @@ cat > "$PLIST" <<PLIST
     <key>PATH</key><string>$(dirname "$YARN"):/usr/local/bin:/usr/bin:/bin</string>
     <key>OPERATOR</key><string>$OPERATOR</string>
     <key>HOST</key><string>0.0.0.0</string>
-    <key>PORT</key><string>4000</string>
+    <key>PORT</key><string>4100</string>
   </dict>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
@@ -57,7 +57,7 @@ launchctl bootstrap "gui/$(id -u)" "$PLIST"
 sleep 2
 IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo '<IP>')"
 echo "Xizmat o'rnatildi: $LABEL (operator: $OPERATOR)"
-echo "  Siz:      http://localhost:4000"
-echo "  Sherik:   http://$IP:4000"
+echo "  Siz:      http://localhost:4100"
+echo "  Sherik:   http://$IP:4100"
 echo "  Log:      $LOG"
 tail -3 "$LOG" 2>/dev/null || true

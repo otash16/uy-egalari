@@ -1,4 +1,4 @@
-import type { Board, Call, Column, Lead, LeadInput, Operator, SyncResult } from "../types";
+import type { Board, Call, Column, Lead, LeadInput, Operator, Stats, SyncResult } from "../types";
 
 async function request<T>(method: string, url: string, body?: unknown, contentType = "application/json"): Promise<T> {
   let res: Response;
@@ -19,6 +19,7 @@ async function request<T>(method: string, url: string, body?: unknown, contentTy
 export const api = {
   board: () => request<Board>("GET", "/api/board"),
   calls: () => request<Call[]>("GET", "/api/calls"),
+  stats: () => request<Stats>("GET", "/api/stats"),
 
   createLead: (data: LeadInput) => request<Lead>("POST", "/api/leads", data),
   updateLead: (id: string, data: Partial<LeadInput>) => request<Lead>("PATCH", `/api/leads/${id}`, data),

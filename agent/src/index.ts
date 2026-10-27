@@ -2,7 +2,7 @@
  * Uy egalari doskasi — softphone agenti.
  * Shu kompyuterdagi Linphone/MicroSIP tarixini kuzatadi va yangi kontakt/qo'ng'iroqlarni serverga yuboradi.
  *
- *   config.json:  { "server": "http://192.168.1.10:4000", "operator": "Akbar", "softphone": "microsip", "path": "" }
+ *   config.json:  { "server": "http://192.168.1.10:4100", "operator": "Akbar", "softphone": "microsip", "path": "" }
  *   ishga tushirish:  yarn start   (yoki  npx tsx src/index.ts)
  */
 import fs from "node:fs";

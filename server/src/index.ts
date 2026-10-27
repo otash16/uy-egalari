@@ -10,10 +10,11 @@ import { importExportRouter } from "./routes/importExport.js";
 import { leadsRouter } from "./routes/leads.js";
 import { broadcast, eventsHandler } from "./events.js";
 import { operatorsRouter } from "./routes/operators.js";
+import { statsRouter } from "./routes/stats.js";
 import { applySync } from "./sync.js";
 import { localOperator, watchLocal } from "./local.js";
 
-const PORT = Number(process.env.PORT ?? 4000);
+const PORT = Number(process.env.PORT ?? 4100);
 // Ofis tarmog'idagi sherik ham ochishi uchun hamma interfeyslarda eshitadi. Faqat o'zim uchun: HOST=127.0.0.1
 const HOST = process.env.HOST ?? "0.0.0.0";
 const app = express();
@@ -43,6 +44,7 @@ app.use("/api/operators", operatorsRouter);
 app.use("/api/columns", columnsRouter);
 app.use("/api/leads", leadsRouter);
 app.use("/api", importExportRouter);
+app.use("/api", statsRouter);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Bunday API yo'q" }));
 
 // Build qilingan frontendni shu serverning o'zi beradi (yarn start).

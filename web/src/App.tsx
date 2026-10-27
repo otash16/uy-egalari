@@ -230,6 +230,9 @@ export default function App() {
           <button className="btn me-btn" type="button" onClick={() => setOpOpen(true)} title="Operatorni o'zgartirish">
             {me ? <OpBadge name={me} me={me} title="Siz" /> : "Siz kimsiz?"}
           </button>
+          <a className="btn" href="/dashboard" title="Boshliqlar uchun voronka va statistika">
+            Dashboard
+          </a>
           <button className="btn" type="button" onClick={() => setCallsOpen(true)}>
             Qo'ng'iroqlar
           </button>

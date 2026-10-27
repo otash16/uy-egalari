@@ -12,8 +12,8 @@ boshqa operatorning uy egasiga qo'ng'iroq qilinsa hammaning ekranida qizil ogohl
 ```
   Otajon (Mac)                                  Akbar (Windows)
   ┌─────────────────────────────┐               ┌──────────────────────────┐
-  │ Linphone ──► server :4000   │◄── tarmoq ────│ MicroSIP ──► agent       │
-  │              + SQLite baza  │               │ brauzer: http://IP:4000  │
+  │ Linphone ──► server :4100   │◄── tarmoq ────│ MicroSIP ──► agent       │
+  │              + SQLite baza  │               │ brauzer: http://IP:4100  │
   │ brauzer: http://localhost   │               └──────────────────────────┘
   └─────────────────────────────┘
 ```
@@ -22,12 +22,12 @@ boshqa operatorning uy egasiga qo'ng'iroq qilinsa hammaning ekranida qizil ogohl
 
 ```bash
 yarn setup             # birinchi marta: paketlar, baza, build
-yarn start             # http://localhost:4000 — tarmoqda ham ochiq (0.0.0.0)
+yarn start             # http://localhost:4100 — tarmoqda ham ochiq (0.0.0.0)
 yarn service:install   # macOS: kompyuter yoqilganda o'zi ishga tushadigan xizmat (tavsiya)
-yarn ip                # sherikka beriladigan manzil: http://<shu IP>:4000
+yarn ip                # sherikka beriladigan manzil: http://<shu IP>:4100
 ```
 
-Kod ustida ishlash uchun: `yarn dev` (sayt http://localhost:5173, API 4000-portda).
+Kod ustida ishlash uchun: `yarn dev` (sayt http://localhost:5173, API 4100-portda).
 
 Muhit o'zgaruvchilari (ixtiyoriy): `OPERATOR` (server kompyuterining operatori, standart `Otajon`),
 `SOFTPHONE` (`linphone` | `microsip`, standart: Linphone bazasi bo'lsa `linphone`), `SOFTPHONE_PATH`,

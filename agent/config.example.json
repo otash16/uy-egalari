@@ -1,5 +1,5 @@
 {
-  "server": "http://192.168.15.179:4000",
+  "server": "http://192.168.15.179:4100",
   "operator": "Akbar",
   "softphone": "microsip",
   "path": ""
