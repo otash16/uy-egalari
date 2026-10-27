@@ -3,6 +3,7 @@ import { api, type UserInput } from "../lib/api";
 import { can, type Operator, type User } from "../types";
 import { Modal } from "../components/Modal";
 import { Icon } from "../components/Icon";
+import { Select } from "../components/Select";
 
 const fmtDate = (s: string) => new Date(s).toLocaleDateString("ru-RU");
 
@@ -292,25 +293,22 @@ function UserModal({ user, operators, isSelf, onClose, onSave, onDelete }: Modal
             {newOp ? (
               <input id="u_op" value={form.operator} onChange={(e) => set("operator", e.target.value)} placeholder="Yangi operator nomi" maxLength={40} autoFocus />
             ) : (
-              <select
+              <Select
                 id="u_op"
                 value={form.operator}
-                onChange={(e) => {
-                  if (e.target.value === "__new") {
+                onChange={(v) => {
+                  if (v === "__new") {
                     setNewOp(true);
                     set("operator", "");
-                  } else set("operator", e.target.value);
+                  } else set("operator", v);
                 }}
-              >
-                <option value="">— yo'q (PM, kuzatuvchi) —</option>
-                {operators.map((o) => (
-                  <option key={o.name} value={o.name}>
-                    {o.name}
-                  </option>
-                ))}
-                {form.operator && !operators.some((o) => o.name === form.operator) && <option value={form.operator}>{form.operator}</option>}
-                <option value="__new">+ Yangi operator…</option>
-              </select>
+                options={[
+                  { value: "", label: "— yo'q (PM, kuzatuvchi) —" },
+                  ...operators.map((o) => ({ value: o.name, label: o.name })),
+                  ...(form.operator && !operators.some((o) => o.name === form.operator) ? [{ value: form.operator, label: form.operator }] : []),
+                  { value: "__new", label: "+ Yangi operator…" },
+                ]}
+              />
             )}
           </div>
           <div className="field">

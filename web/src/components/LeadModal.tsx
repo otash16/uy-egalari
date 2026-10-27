@@ -3,6 +3,7 @@ import type { Call, Column, Lead, LeadInput, Operator } from "../types";
 import { CallLine } from "./CallRow";
 import { fmtDateTime, fmtPhone, normUrl, olxTitle, phoneKey, safeHref } from "../lib/text";
 import { Modal } from "./Modal";
+import { Select } from "./Select";
 import { CALL_RESULTS } from "../lib/results";
 
 type Props = {
@@ -153,23 +154,11 @@ export function LeadModal({ lead, columnId, prefill, columns, operators, me, any
         <div className="row3">
           <div className="field">
             <label htmlFor="f_col">Bosqich</label>
-            <select id="f_col" value={form.columnId} onChange={(e) => set("columnId", e.target.value)}>
-              {columns.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+            <Select id="f_col" value={form.columnId} onChange={(v) => set("columnId", v)} options={columns.map((c) => ({ value: c.id, label: c.name }))} />
           </div>
           <div className="field">
             <label htmlFor="f_result">Natija</label>
-            <select id="f_result" value={form.callResult} onChange={(e) => set("callResult", e.target.value as LeadInput["callResult"])}>
-              {CALL_RESULTS.map((r) => (
-                <option key={r.value} value={r.value}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
+            <Select id="f_result" value={form.callResult} onChange={(v) => set("callResult", v as LeadInput["callResult"])} options={CALL_RESULTS.map((r) => ({ value: r.value, label: r.label }))} />
           </div>
           <div className="field">
             <label htmlFor="f_next">Qayta qo'ng'iroq</label>
@@ -178,16 +167,16 @@ export function LeadModal({ lead, columnId, prefill, columns, operators, me, any
         </div>
         <div className="field">
           <label htmlFor="f_op">Mas'ul operator</label>
-          <select id="f_op" value={form.operator} onChange={(e) => set("operator", e.target.value)}>
-            <option value="">— belgilanmagan —</option>
-            {operators.filter((o) => anyOperator || o.name === me).map((o) => (
-              <option key={o.name} value={o.name}>
-                {o.name}
-                {o.name === me ? " (men)" : ""}
-              </option>
-            ))}
-            {form.operator && !operators.some((o) => o.name === form.operator) && <option value={form.operator}>{form.operator}</option>}
-          </select>
+          <Select
+            id="f_op"
+            value={form.operator}
+            onChange={(v) => set("operator", v)}
+            options={[
+              { value: "", label: "— belgilanmagan —" },
+              ...operators.filter((o) => anyOperator || o.name === me).map((o) => ({ value: o.name, label: o.name, hint: o.name === me ? "men" : undefined })),
+              ...(form.operator && !operators.some((o) => o.name === form.operator) ? [{ value: form.operator, label: form.operator }] : []),
+            ]}
+          />
         </div>
         {calls.length > 0 && (
           <div className="field">

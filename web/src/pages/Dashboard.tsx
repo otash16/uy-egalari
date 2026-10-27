@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Stats } from "../types";
 import { api } from "../lib/api";
+import { Select } from "../components/Select";
 import "./dashboard.css";
 
 /* ---------- formatlash ---------- */
@@ -338,10 +339,7 @@ export function Dashboard() {
               <p className="note">Doskadagi har bir karta: bosqichi, nechta qo'ng'iroq bo'lgani va oxirgi qo'ng'iroq. Sarlavhani bosib saralang.</p>
               <div className="tools">
                 <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ism, uy yoki bosqich bo'yicha qidirish" aria-label="Qidirish" />
-                <select value={stage} onChange={(e) => setStage(e.target.value)} aria-label="Bosqich">
-                  <option value="">Barcha bosqichlar</option>
-                  {stages.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
+                <Select value={stage} onChange={setStage} aria-label="Bosqich" options={[{ value: "", label: "Barcha bosqichlar" }, ...stages.map((s) => ({ value: s, label: s }))]} />
                 <span className="note">{leadsShown.length === data.leads.length ? `${fmtN(leadsShown.length)} ta karta` : `${fmtN(leadsShown.length)} / ${fmtN(data.leads.length)} ta karta`}</span>
               </div>
               <div className="tbox">

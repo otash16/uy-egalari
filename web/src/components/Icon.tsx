@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
 
-export type IconName = "menu" | "close" | "calendar" | "chevron" | "key" | "logout" | "kanban" | "dashboard" | "users" | "search" | "phone" | "plus" | "edit" | "database" | "home" | "user" | "lock";
+export type IconName = "menu" | "close" | "calendar" | "chevron" | "key" | "logout" | "kanban" | "dashboard" | "users" | "search" | "phone" | "plus" | "edit" | "database" | "home" | "user" | "lock" | "check";
 
 /** Chiziqli ikonkalar (Remix Icon uslubi, 1.8px). Tashqi kutubxonasiz. */
 export function Icon({ name, size = 18, ...rest }: { name: IconName; size?: number } & SVGProps<SVGSVGElement>) {
@@ -40,6 +40,8 @@ export function Icon({ name, size = 18, ...rest }: { name: IconName; size?: numb
       return <svg {...p}><circle cx="12" cy="8" r="4" /><path d="M4 20a8 8 0 0 1 16 0" /></svg>;
     case "lock":
       return <svg {...p}><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>;
+    case "check":
+      return <svg {...p}><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>;
   }
 }
 
