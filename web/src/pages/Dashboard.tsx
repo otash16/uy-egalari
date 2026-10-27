@@ -274,8 +274,6 @@ export function Dashboard() {
             <section className="tiles" aria-label="Qo'ng'iroqlar">
               <Tile k="Jami qo'ng'iroqlar" v={fmtN(S.calls_total)} s={`${fmtN(S.calls_out)} tasi chiquvchi`} />
               <Tile k="Javob berilgan" v={fmtN(S.calls_success)} s={`${pct(S.calls_success / S.calls_total)} qo'ng'iroqlardan`} />
-              <Tile k="Gaplashuv vaqti" v={fmtN(Math.round(S.talk_seconds / 60))} s="daqiqa, jami" />
-              <Tile k="O'rtacha suhbat" v={fmtN(S.avg_talk_seconds)} s="soniya, javob berilganlar bo'yicha" />
               <Tile k="Instagram lidlari" v="Manba ulanmagan" s="Lidlar bazasi ulangach: kelgan, qo'ng'iroq qilingan, ro'yxatdan o'tgan" cls="soon" />
             </section>
 
