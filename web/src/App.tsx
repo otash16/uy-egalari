@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { can, type Board as BoardData, type Call, type Column, type Lead, type LeadInput, type SyncResult, type SyncWarning, type User } from "./types";
 import { api } from "./lib/api";
-import { digits, fmtPhone, isPhoneQuery, matches, phoneKey, todayStr } from "./lib/text";
+import { digits, fmtPhone, isPhoneQuery, matches, phoneKey } from "./lib/text";
 import { isOnline, setOperators } from "./lib/operators";
 import { Board } from "./components/Board";
 import { LeadModal } from "./components/LeadModal";
@@ -9,7 +9,7 @@ import { ColumnModal } from "./components/ColumnModal";
 import { CallsModal } from "./components/CallsModal";
 import { Icon } from "./components/Icon";
 import { SearchCalls, type UnknownNumber } from "./components/SearchCalls";
-import { fmtCallTime, groupCalls, isTalked, isToday } from "./lib/calls";
+import { fmtCallTime, groupCalls, isTalked } from "./lib/calls";
 
 type LeadDialog = { lead?: Lead; columnId?: string; prefill?: Partial<LeadInput> };
 type ColumnDialog = { column?: Column };
@@ -150,15 +150,10 @@ export default function App() {
   }, [q, leads, callsByKey]);
 
   const stats = useMemo(() => {
-    const today = todayStr();
     return {
       total: leads.length,
       mine: leads.filter((l) => l.operator === me).length,
-      onRentmi: leads.filter((l) => l.rentmeUrl.trim()).length,
-      due: leads.filter((l) => l.nextCall && l.nextCall <= today).length,
       found: q ? shown.filter((l) => matches(l, q)).length : 0,
-      callsToday: calls.filter((c) => isToday(c.startedAt)).length,
-      talkedToday: calls.filter((c) => isToday(c.startedAt) && isTalked(c)).length,
       callsAll: calls.length,
       talkedAll: calls.filter(isTalked).length,
     };
@@ -303,15 +298,6 @@ export default function App() {
                 </button>
               ))}
             </span>
-            <span>
-              Rentmi'ga joylangan <b>{stats.onRentmi}</b>
-            </span>
-            <span className={stats.due ? "due" : undefined}>
-              Qayta qo'ng'iroq kerak <b>{stats.due}</b>
-            </span>
-            <button type="button" className="stat-link" onClick={() => setCallsOpen(true)}>
-              Bugun qo'ng'iroq <b>{stats.callsToday}</b>, gaplashildi <b>{stats.talkedToday}</b>
-            </button>
             <button type="button" className="stat-link" onClick={() => setCallsOpen(true)}>
               Jami qo'ng'iroq <b>{stats.callsAll}</b>, gaplashildi <b>{stats.talkedAll}</b>
             </button>
