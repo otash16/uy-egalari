@@ -11,14 +11,16 @@ type Props = {
   calls: Call[];
   leads: Lead[];
   me: string;
+  /** Oddiy operator uchun oyna "Meniki" tabidan ochiladi, dasturchi uchun "Bugun" */
+  defaultTab?: Tab;
   onClose: () => void;
   onOpenLead: (lead: Lead) => void;
   onCreateFrom: (number: string) => void;
 };
 
 /** Hamma operatorlarning softphone'laridan olingan qo'ng'iroqlar; doskada yo'q raqamlardan karta yaratish mumkin. */
-export function CallsModal({ calls, leads, me, onClose, onOpenLead, onCreateFrom }: Props) {
-  const [tab, setTab] = useState<Tab>("today");
+export function CallsModal({ calls, leads, me, defaultTab = "today", onClose, onOpenLead, onCreateFrom }: Props) {
+  const [tab, setTab] = useState<Tab>(defaultTab);
 
   const leadByKey = useMemo(() => {
     const m = new Map<string, Lead>();

@@ -438,6 +438,7 @@ export default function App() {
           calls={calls}
           leads={leads}
           me={me}
+          defaultTab={!user?.isAdmin && me ? "mine" : "today"}
           onClose={() => setCallsOpen(false)}
           onOpenLead={(lead) => {
             setCallsOpen(false);
