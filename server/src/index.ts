@@ -14,6 +14,7 @@ import { operatorsRouter } from "./routes/operators.js";
 import { statsRouter } from "./routes/stats.js";
 import { applySync } from "./sync.js";
 import { localOperator, watchLocal } from "./local.js";
+import { callsFromAsterisk, watchAsterisk } from "./asterisk.js";
 import { authMiddleware, ensureInitialUser, loginRouter, meRouter, requireAccess, requireAdmin } from "./auth.js";
 import { usersRouter } from "./routes/users.js";
 
@@ -49,7 +50,10 @@ app.get("/api/events", eventsHandler);
 app.post("/api/sync", async (req, res) => {
   const u = req.user!;
   if (!u.operator) throw new HttpError(403, "Bu hisobga operator bog'lanmagan — sync qila olmaydi");
-  const r = await applySync({ ...(req.body ?? {}), operator: u.operator });
+  const body = { ...(req.body ?? {}), operator: u.operator };
+  // Bu operatorning qo'ng'iroqlari Asterisk'dan keladi — agent faqat kontakt yuboradi (takror bo'lmasin)
+  if (callsFromAsterisk(u.operator)) body.calls = [];
+  const r = await applySync(body);
   if (r.added || r.calls || r.warnings.length) broadcast("sync", r);
   res.json(r);
 });
@@ -88,6 +92,11 @@ await ensureInitialUser();
 watchLocal((r) => {
   if (r.added) console.log(`${r.operator}: ${r.added} ta yangi kontakt — ${r.names.join(", ")}`);
   if (r.calls) console.log(`${r.operator}: ${r.calls} ta yangi qo'ng'iroq`);
+  broadcast("sync", r);
+});
+// Serverda Asterisk (PBX) bo'lsa — qo'ng'iroqlar to'g'ridan-to'g'ri uning jurnalidan, agentsiz
+watchAsterisk((r) => {
+  if (r.calls) console.log(`${r.operator}: ${r.calls} ta yangi qo'ng'iroq (Asterisk)`);
   broadcast("sync", r);
 });
 app.listen(PORT, HOST, () => {

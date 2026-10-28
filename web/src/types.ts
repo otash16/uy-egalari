@@ -9,7 +9,7 @@ export type Column = {
 export type Operator = {
   name: string;
   color: number;
-  softphone: "linphone" | "microsip" | "";
+  softphone: "linphone" | "microsip" | "asterisk" | "";
   lastSyncAt: string | null;
   createdAt: string;
 };

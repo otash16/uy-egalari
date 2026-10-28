@@ -10,6 +10,13 @@ services:
     env_file: .env          # BOARD_PASSWORD=...
     volumes:
       - ./data:/data
+      # PBX (Asterisk) qo'ng'iroq jurnali — shu serverda; faqat o'qish uchun
+      - /var/log/asterisk/cdr-csv:/asterisk:ro
+    environment:
+      ASTERISK_CDR: /asterisk/Master.csv
+      # Ichki raqam → operator (.env da ASTERISK_EXTENSIONS bilan almashtirsa bo'ladi)
+      ASTERISK_EXTENSIONS: ${ASTERISK_EXTENSIONS:-101:Otajon,102:Akbar}
+      ASTERISK_SINCE: ${ASTERISK_SINCE:-2026-10-28T00:00:00Z}
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }

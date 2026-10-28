@@ -4,7 +4,7 @@ import type { SyncPayload, SyncResult, SyncWarning } from "../../agent/src/types
 
 export type { SyncPayload, SyncResult, SyncWarning };
 
-const SOFTPHONES = new Set(["linphone", "microsip"]);
+const SOFTPHONES = new Set(["linphone", "microsip", "asterisk"]);
 
 /** Operator nomini tozalaydi va bazada bo'lishini ta'minlaydi (yo'q bo'lsa yaratadi). */
 export async function ensureOperator(rawName: unknown, softphone?: string) {
@@ -22,7 +22,7 @@ export async function ensureOperator(rawName: unknown, softphone?: string) {
 /** Payload'ni tekshiradi; noto'g'ri bo'lsa 400 qaytaradi. */
 function validate(body: any): SyncPayload {
   if (!body || typeof body !== "object") throw new HttpError(400, "Sync ma'lumoti yo'q");
-  if (!SOFTPHONES.has(body.softphone)) throw new HttpError(400, "softphone linphone yoki microsip bo'lishi kerak");
+  if (!SOFTPHONES.has(body.softphone)) throw new HttpError(400, "softphone linphone, microsip yoki asterisk bo'lishi kerak");
   const str = (v: unknown, max = 1000) => String(v ?? "").trim().slice(0, max);
   const contacts = Array.isArray(body.contacts)
     ? body.contacts.filter((c: any) => c && str(c.extId)).map((c: any) => ({ extId: str(c.extId, 64), name: str(c.name), phone: str(c.phone, 64), olxUrl: str(c.olxUrl) }))

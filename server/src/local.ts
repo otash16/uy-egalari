@@ -3,6 +3,7 @@ import { createSource } from "../../agent/src/softphone.js";
 import type { Softphone, SyncResult } from "../../agent/src/types.js";
 import { defaultLinphonePath } from "../../agent/src/linphone.js";
 import { applySync } from "./sync.js";
+import { callsFromAsterisk } from "./asterisk.js";
 
 /**
  * Server turgan kompyuterning o'z softphone'i — alohida agent kerak emas, shu jarayonda kuzatiladi.
@@ -24,7 +25,7 @@ export async function syncLocal(): Promise<SyncResult> {
   const sig = source.signature();
   if (sig === lastSig) return { operator: OPERATOR, total: 0, added: 0, duplicates: 0, names: [], calls: 0, warnings: [] };
   const { contacts, calls, maxCallId } = source.read(afterCallId);
-  const r = await applySync({ operator: OPERATOR, softphone: source.softphone, contacts, calls });
+  const r = await applySync({ operator: OPERATOR, softphone: source.softphone, contacts, calls: callsFromAsterisk(OPERATOR) ? [] : calls });
   lastSig = sig;
   afterCallId = Math.max(afterCallId, maxCallId);
   return r;

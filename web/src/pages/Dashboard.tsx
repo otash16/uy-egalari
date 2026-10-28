@@ -325,7 +325,7 @@ export function Dashboard() {
                         <td className="n">{fmtN(o.calls)}</td>
                         <td className="n">{o.calls ? `${fmtN(o.success)} (${pct(o.success / o.calls)})` : "0"}</td>
                         <td className="n">{mins(o.talk_seconds)}</td>
-                        <td>{o.softphone === "linphone" ? "Linphone" : o.softphone === "microsip" ? "MicroSIP" : "Sozlanmagan"}</td>
+                        <td>{o.softphone === "linphone" ? "Linphone" : o.softphone === "microsip" ? "MicroSIP" : o.softphone === "asterisk" ? "PBX (Asterisk)" : "Sozlanmagan"}</td>
                         <td>{o.last_sync_ms ? fmtDT(o.last_sync_ms) : "Hali ulanmagan"}</td>
                       </tr>
                     ))}

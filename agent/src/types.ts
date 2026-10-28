@@ -1,6 +1,7 @@
 /** Agent → server yuboriladigan ma'lumotlar (POST /api/sync). */
 
-export type Softphone = "linphone" | "microsip";
+/** asterisk — serverning o'zi PBX jurnalidan o'qiydi (agent emas) */
+export type Softphone = "linphone" | "microsip" | "asterisk";
 
 export type SyncContact = {
   /** Softphone'dagi kontakt id (matn) */
