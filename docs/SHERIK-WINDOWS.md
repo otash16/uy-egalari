@@ -32,19 +32,21 @@ Parolni o'zgartirish: yuqori o'ngdagi ismingiz → "Parolni o'zgartirish".
    - `operator` — faqat oynada ko'rsatish uchun; doskada ism tokendan olinadi
    - `path` — bo'sh qoldiring. MicroSIP portable (o'rnatilmagan, papkadan ishlaydigan) bo'lsa,
      `microsip.exe` turgan papkani yozing, masalan `"C:\\MicroSIP"` (ikki teskari chiziq bilan).
-4. `start-agent.bat` ni ikki marta bosing. Birinchi safar paketlarni o'rnatadi (internet kerak), keyin qora oyna ochiladi:
-   ```
-   Uy egalari agenti — operator: Akbar, microsip (C:\Users\...\AppData\Roaming\MicroSIP) → https://doska.zapusk.uz
-   10:15:02  +0 kontakt, +37 qo'ng'iroq
-   ```
-   Oynani **yopmang**, kichraytirib qo'ying (yopsangiz qo'ng'iroqlar doskaga tushmay turadi; qayta ochsangiz hammasini yetkazadi).
-5. Kompyuter yonganda o'zi ishga tushsin: `start-agent.bat` ustida o'ng tugma → *Yorliq yaratish* (Create shortcut),
-   `Win+R` → `shell:startup` → Enter → ochilgan papkaga yorliqni ko'chiring.
+4. Papkadagi `ornatish.bat` ni **ikki marta bosing**. Ko'k "Windows protected your PC" oynasi chiqsa: "More info" → "Run anyway".
+   Qora oyna ochilib paketlarni o'rnatadi (birinchi safar 1–2 daqiqa, internet kerak), avtostartni sozlaydi va agentni
+   fonda ishga tushiradi. Oxirida "Tayyor" deb yozadi, istalgan tugmani bosib yoping.
+
+Shu bilan tamom. Agent **ko'rinmas** ishlaydi: hech qanday oyna yo'q, yopib qo'yish mumkin emas, kompyuter qayta yonganda o'zi
+ishga tushadi. Nima qilayotganini ko'rish: papkadagi `agent.log` fayli (Bloknotda ochiladi).
+To'xtatish yoki olib tashlash: `olib-tashlash.bat`.
+
+> Qo'ng'iroqlar agentsiz ham doskaga tushadi — ularni telefon stansiyasining o'zi yozib boradi. Agent faqat MicroSIP'ga
+> qo'shgan **kontaktlaringizni** doskaga karta qilib tushirish uchun kerak.
 
 ### Qanday ishlashini tekshirish
 
-MicroSIP'dan birorta raqamga qo'ng'iroq qiling. 5–10 soniyada doskada "Qo'ng'iroqlar" bo'limida u sizning ismingiz bilan
-ko'rinadi; raqam doskadagi kartaga tegishli bo'lsa, kartaning o'zida ham chiqadi.
+MicroSIP → Contacts → Add bilan bitta kontakt qo'shing. 5–10 soniyada doskada "Yangi" ustunida u sizning ismingiz bilan karta
+bo'lib chiqadi. Chiqmasa, `agent.log` ning oxirgi qatorlarini sherigingizga yuboring.
 
 ### Kontaktlarni MicroSIP'ga qo'shsangiz
 
@@ -65,4 +67,6 @@ Baribir qilsangiz, ikkalangizning ekraningizda qizil ogohlantirish chiqadi.
 | `Serverga ulanib bo'lmadi` / `fetch failed` | Internet yo'q yoki `config.json` dagi `server` noto'g'ri (https://doska.zapusk.uz bo'lishi kerak) |
 | `401` / token xatosi | `config.json` dagi `token` noto'g'ri — sherigingizdan yangisini oling (/users → "Agent token") |
 | `Node.js topilmadi` | Node.js o'rnatilmagan yoki o'rnatgandan keyin kompyuter qayta yoqilmagan |
+| Kontakt doskaga tushmayapti | `agent.log` oxirini qarang. Fayl umuman yangilanmasa agent ishlamayapti — `ornatish.bat` ni qayta bosing |
+| Agent bilan nima bo'layotganini ko'rmoqchiman | `start-agent.bat` — xuddi shu agent, lekin oynada (avval `olib-tashlash.bat`, aks holda ikkita ishlaydi) |
 | Qo'ng'iroqlar eski MicroSIP'da (3.20 va pastroq) | Agent `microsip.ini` dan ham o'qiy oladi, lekin yangi versiyaga o'tish yaxshiroq |

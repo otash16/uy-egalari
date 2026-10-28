@@ -8,7 +8,7 @@ OUT="$HOME/Desktop/uy-egalari-agent.zip"
 SERVER="${SERVER:-https://doska.zapusk.uz}"
 TMP="$(mktemp -d)"
 mkdir -p "$TMP/uy-egalari-agent"
-cp -R "$ROOT/agent/src" "$ROOT/agent/package.json" "$ROOT/agent/tsconfig.json" "$ROOT/agent/start-agent.bat" "$ROOT/agent/config.example.json" "$TMP/uy-egalari-agent/"
+cp -R "$ROOT/agent/src" "$ROOT/agent/package.json" "$ROOT/agent/tsconfig.json" "$ROOT/agent/start-agent.bat" "$ROOT/agent/ornatish.bat" "$ROOT/agent/olib-tashlash.bat" "$ROOT/agent/run-service.cmd" "$ROOT/agent/run-hidden.vbs" "$ROOT/agent/config.example.json" "$TMP/uy-egalari-agent/"
 cp "$ROOT/docs/SHERIK-WINDOWS.md" "$TMP/uy-egalari-agent/O'RNATISH.md"
 # Tayyor config: prod manzili + (berilgan bo'lsa) agent tokeni
 node -e '
